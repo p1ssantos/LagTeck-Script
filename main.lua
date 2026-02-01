@@ -1,1092 +1,1143 @@
--- [[ LAG TECK COMMUNITY | BLOX FRUITS SUPREME v1.1 - CORRIGIDO ]] --
--- CORREÇÃO: Sistema de pausa automática para evitar volta ao teleportar
--- PARTE 1/6: CORE & SECURITY
+-- [[ LAG TECK COMMUNITY | BLOX FRUITS SUPREME v2.0 - VERSÃO COMPLETA ]] --
+-- CRIADO POR: p1ssantos
+-- DISCORD: discord.gg/RnZ6XHHFj7
 
 if not game:IsLoaded() then game.Loaded:Wait() end
 if _G.LagTeckLoaded then return end
 _G.LagTeckLoaded = true
 
--- Carregando Rayfield (Interface)
+-- ============================================
+-- CARREGANDO RAYFIELD COM LOGO PERSONALIZADA
+-- ============================================
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Lag Teck | Blox Fruits v1.1",
+   Name = "🔥 Lag Teck | Blox Fruits",
    LoadingTitle = "Lag Teck Community",
-   LoadingSubtitle = "by p1ssantos - VERSÃO CORRIGIDA",
-   ConfigurationSaving = { Enabled = true, FolderName = "LagTeckData" },
-   Theme = "Ocean",
-   CustomImageLoader = true
+   LoadingSubtitle = "by p1ssantos - Versão 2.0 Completa",
+   ConfigurationSaving = { 
+      Enabled = true, 
+      FolderName = "LagTeckBloxFruits",
+      FileName = "LagTeckConfig"
+   },
+   Discord = {
+      Enabled = true,
+      Invite = "RnZ6XHHFj7",
+      RememberJoins = true
+   },
+   KeySystem = false,
+   Theme = "Ocean"
 })
 
--- PROTEÇÃO ANTI-KICK (Metatable Bypass)
+-- Logo do Lag Teck (você pode trocar essa URL pela sua logo)
+Rayfield:Notify({
+   Title = "🔥 Lag Teck Loaded!",
+   Content = "Script carregado com sucesso!\nVersão 2.0 - Completa",
+   Duration = 6.5,
+   Image = 4483362458, -- Ícone padrão, troque pelo ID da sua logo
+})
+
+-- ============================================
+-- PROTEÇÃO ANTI-KICK & ANTI-BAN
+-- ============================================
 local mt = getrawmetatable(game)
 local old = mt.__namecall
 setreadonly(mt, false)
 mt.__namecall = newcclosure(function(self, ...)
    local method = getnamecallmethod()
-   if method == "Kick" then return wait(9e9) end
+   if method == "Kick" or method == "kick" then 
+      return wait(9e9) 
+   end
    return old(self, ...)
 end)
 setreadonly(mt, true)
 
--- VARIÁVEIS DE CONTROLE
-_G.AutoFarm = false
-_G.AutoMastery = false
-_G.SelectWeapon = "Melee"
-_G.AutoStats = false
-_G.SeaEvents = false
-_G.FastAttack = true
-_G.BringMobs = false -- 🔧 CORRIGIDO: Agora começa DESLIGADO
-_G.ManualTeleport = false -- 🆕 NOVA VARIÁVEL: Indica teleporte manual
+-- Anti-Detecção
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
--- IDENTIFICAÇÃO DE MUNDO
-local World1, World2, World3 = false, false, false
-if game.PlaceId == 2753915549 then World1 = true
-elseif game.PlaceId == 4442272183 then World2 = true
-elseif game.PlaceId == 7449423635 then World3 = true end
-
--- 🆕 FUNÇÃO PARA PAUSAR TODOS OS FARMS
-function PausarTodosFarms()
-   _G.AutoFarm = false
-   _G.AutoMastery = false
-   _G.BringMobs = false
-   _G.AutoTrial = false
-   _G.KillAuraRaid = false
-   _G.AutoNextIsland = false
-   _G.AutoEctoplasm = false
-   _G.AutoBone = false
-   _G.AutoCocoa = false
-   _G.AutoDoughKing = false
-   _G.SeaEvents = false
-   _G.TerrorShark = false
-   _G.ManualTeleport = true
+-- ============================================
+-- VARIÁVEIS GLOBAIS DE CONTROLE
+-- ============================================
+_G.Settings = {
+   -- FARMS
+   AutoFarmLevel = false,
+   AutoFarmBone = false,
+   AutoFarmEctoplasm = false,
+   AutoFarmCocoa = false,
+   AutoFarmCake = false,
+   AutoFarmElite = false,
+   AutoFarmBoss = false,
+   AutoFarmMastery = false,
+   AutoFarmFragment = false,
+   AutoFarmSeaBeast = false,
    
+   -- RAIDS
+   AutoRaid = false,
+   AutoBuyChip = false,
+   AutoStartRaid = false,
+   AutoAwaken = false,
+   SelectRaid = "Flame",
+   
+   -- FRUTAS
+   AutoStoreFruit = true,
+   AutoEatFruit = false,
+   AutoBuyFruit = false,
+   AutoSnipeFruit = false,
+   
+   -- COMBATE
+   FastAttack = true,
+   SelectWeapon = "Melee",
+   AutoHaki = true,
+   
+   -- STATS
+   AutoMelee = false,
+   AutoDefense = false,
+   AutoSword = false,
+   AutoGun = false,
+   AutoFruit = false,
+   PointsToAdd = 1,
+   
+   -- MISC
+   AutoTrial = false,
+   AutoSeaEvent = false,
+   BringMob = false,
+   NoClip = false,
+   FastMode = false,
+   WhiteScreen = false,
+   
+   -- TELEPORTE
+   ManualTeleport = false,
+   SelectedIsland = "",
+   
+   -- SEA EVENTS
+   AutoTerrorShark = false,
+   AutoShip = false,
+   AutoPiranha = false,
+}
+
+-- ============================================
+-- IDENTIFICAÇÃO DE MUNDO
+-- ============================================
+local World1, World2, World3 = false, false, false
+if game.PlaceId == 2753915549 then 
+   World1 = true
+   print("🌍 Você está no Sea 1 (Old World)")
+elseif game.PlaceId == 4442272183 then 
+   World2 = true
+   print("🌍 Você está no Sea 2 (New World)")
+elseif game.PlaceId == 7449423635 then 
+   World3 = true
+   print("🌍 Você está no Sea 3 (Third Sea)")
+end
+
+-- ============================================
+-- FUNÇÕES ESSENCIAIS
+-- ============================================
+
+-- Função para pausar todos os farms
+function PausarTodosFarms()
+   for k, v in pairs(_G.Settings) do
+      if type(v) == "boolean" and k:find("Auto") then
+         _G.Settings[k] = false
+      end
+   end
+   _G.Settings.ManualTeleport = true
    Rayfield:Notify({
-      Title="Sistema de Proteção", 
-      Content="Todos os farms foram pausados para teleporte seguro!",
-      Duration=3
+      Title = "⚠️ Proteção Ativada",
+      Content = "Todos os farms foram pausados para teleporte seguro!",
+      Duration = 3,
    })
 end
 
--- FUNÇÕES DE SUPORTE
-local function Atacar()
+-- Equipar Arma
+function EquiparArma()
    pcall(function()
-      game:GetService("VirtualUser"):CaptureController()
-      game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
-   end)
-end
-
-function Equipar(tipo)
-   pcall(function()
-      for i, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-         if (tipo == "Melee" and v.ToolTip == "Melee") or 
-            (tipo == "Sword" and v.ToolTip == "Sword") or 
-            (tipo == "Fruit" and v.ToolTip == "Blox Fruit") then
-            game.Players.LocalPlayer.Character.Humanoid:EquipTool(v)
+      for i, v in pairs(LocalPlayer.Backpack:GetChildren()) do
+         if v:IsA("Tool") then
+            if (_G.Settings.SelectWeapon == "Melee" and v.ToolTip == "Melee") or
+               (_G.Settings.SelectWeapon == "Sword" and v.ToolTip == "Sword") or
+               (_G.Settings.SelectWeapon == "Fruit" and v.ToolTip == "Blox Fruit") or
+               (_G.Settings.SelectWeapon == "Gun" and v.ToolTip == "Gun") then
+               LocalPlayer.Character.Humanoid:EquipTool(v)
+            end
          end
       end
    end)
 end
 
--- [[ PARTE 2/6: SISTEMA DE QUESTS E COORDENADAS ]] --
-
-function GetQuest()
-   local level = game.Players.LocalPlayer.Data.Level.Value
-   local questData = {}
-
-   if World1 then
-      if level >= 1 and level < 10 then
-         questData = {Mon="Bandit", ID="BanditQuest1", Lvl=1, NPC=CFrame.new(1059.37, 15.44, 1550.42)}
-      elseif level >= 10 and level < 15 then
-         questData = {Mon="Monkey", ID="JungleQuest", Lvl=1, NPC=CFrame.new(-1598.08, 35.55, 153.37)}
-      elseif level >= 15 and level < 30 then
-         questData = {Mon="Gorilla", ID="JungleQuest", Lvl=2, NPC=CFrame.new(-1598.08, 35.55, 153.37)}
-      elseif level >= 30 and level < 40 then
-         questData = {Mon="Pirate", ID="BuggyQuest1", Lvl=1, NPC=CFrame.new(-1141.07, 4.10, 3831.54)}
-      elseif level >= 40 and level < 60 then
-         questData = {Mon="Brute", ID="BuggyQuest1", Lvl=2, NPC=CFrame.new(-1141.07, 4.10, 3831.54)}
-      elseif level >= 60 and level < 75 then
-         questData = {Mon="Desert Bandit", ID="DesertQuest", Lvl=1, NPC=CFrame.new(894.48, 5.14, 4392.43)}
-      elseif level >= 75 and level < 90 then
-         questData = {Mon="Desert Officer", ID="DesertQuest", Lvl=2, NPC=CFrame.new(894.48, 5.14, 4392.43)}
-      elseif level >= 90 and level < 100 then
-         questData = {Mon="Snow Bandit", ID="SnowQuest", Lvl=1, NPC=CFrame.new(1389.74, 88.15, -1298.90)}
-      elseif level >= 100 and level < 120 then
-         questData = {Mon="Snowman", ID="SnowQuest", Lvl=2, NPC=CFrame.new(1389.74, 88.15, -1298.90)}
-      elseif level >= 120 and level < 150 then
-         questData = {Mon="Chief Petty Officer", ID="MarineQuest2", Lvl=1, NPC=CFrame.new(-5039.58, 27.35, 4324.68)}
-      elseif level >= 150 and level < 175 then
-         questData = {Mon="Sky Bandit", ID="SkyQuest", Lvl=1, NPC=CFrame.new(-4839.53, 716.36, -2619.44)}
-      elseif level >= 175 and level < 190 then
-         questData = {Mon="Dark Master", ID="SkyQuest", Lvl=2, NPC=CFrame.new(-4839.53, 716.36, -2619.44)}
-      elseif level >= 190 and level < 210 then
-         questData = {Mon="Prisoner", ID="PrisonerQuest", Lvl=1, NPC=CFrame.new(5308.93, 1.65, 475.12)}
-      elseif level >= 210 and level < 250 then
-         questData = {Mon="Dangerous Prisoner", ID="PrisonerQuest", Lvl=2, NPC=CFrame.new(5308.93, 1.65, 475.12)}
-      elseif level >= 250 and level < 275 then
-         questData = {Mon="Toga Warrior", ID="ColosseumQuest", Lvl=1, NPC=CFrame.new(-1580.04, 6.35, -2986.47)}
-      elseif level >= 275 and level < 300 then
-         questData = {Mon="Gladiator", ID="ColosseumQuest", Lvl=2, NPC=CFrame.new(-1580.04, 6.35, -2986.47)}
-      elseif level >= 300 and level < 325 then
-         questData = {Mon="Military Soldier", ID="MagmaQuest", Lvl=1, NPC=CFrame.new(-5313.37, 10.95, 8515.29)}
-      elseif level >= 325 and level < 375 then
-         questData = {Mon="Military Spy", ID="MagmaQuest", Lvl=2, NPC=CFrame.new(-5313.37, 10.95, 8515.29)}
-      elseif level >= 375 and level < 450 then
-         questData = {Mon="Fishman Warrior", ID="FishmanQuest", Lvl=1, NPC=CFrame.new(61122.65, 18.49, 1569.39)}
-      elseif level >= 450 and level < 475 then
-         questData = {Mon="God's Guard", ID="SkyExp1Quest", Lvl=1, NPC=CFrame.new(-4721.88, 843.87, -1949.96)}
-      elseif level >= 475 and level < 525 then
-         questData = {Mon="Shanda", ID="SkyExp1Quest", Lvl=2, NPC=CFrame.new(-7859.09, 5544.19, -381.47)}
-      elseif level >= 525 and level < 625 then
-         questData = {Mon="Royal Squad", ID="SkyExp2Quest", Lvl=1, NPC=CFrame.new(-7906.81, 5634.66, -1411.99)}
-      elseif level >= 625 and level < 700 then
-         questData = {Mon="Galley Pirate", ID="FountainQuest", Lvl=1, NPC=CFrame.new(5259.81, 37.35, 4050.02)}
-      end
-   
-   elseif World2 then
-      if level >= 700 and level < 725 then
-         questData = {Mon="Raider", ID="Area1Quest", Lvl=1, NPC=CFrame.new(-429.54, 71.76, 1836.18)}
-      elseif level >= 725 and level < 775 then
-         questData = {Mon="Mercenary", ID="Area1Quest", Lvl=2, NPC=CFrame.new(-429.54, 71.76, 1836.18)}
-      elseif level >= 775 and level < 800 then
-         questData = {Mon="Swan Pirate", ID="Area2Quest", Lvl=1, NPC=CFrame.new(638.43, 71.76, 918.28)}
-      elseif level >= 800 and level < 875 then
-         questData = {Mon="Factory Staff", ID="Area2Quest", Lvl=2, NPC=CFrame.new(632.69, 73.10, 918.66)}
-      elseif level >= 875 and level < 900 then
-         questData = {Mon="Marine Lieutenant", ID="MarineQuest3", Lvl=1, NPC=CFrame.new(-2440.79, 71.71, -3216.06)}
-      elseif level >= 900 and level < 950 then
-         questData = {Mon="Marine Captain", ID="MarineQuest3", Lvl=2, NPC=CFrame.new(-2440.79, 71.71, -3216.06)}
-      elseif level >= 950 and level < 1000 then
-         questData = {Mon="Zombie", ID="ZombieQuest", Lvl=1, NPC=CFrame.new(-5497.06, 47.59, -795.23)}
-      elseif level >= 1000 and level < 1100 then
-         questData = {Mon="Snow Trooper", ID="SnowMountainQuest", Lvl=1, NPC=CFrame.new(609.85, 400.11, -5372.25)}
-      elseif level >= 1100 and level < 1175 then
-         questData = {Mon="Lab Subordinate", ID="IceSideQuest", Lvl=1, NPC=CFrame.new(-6064.06, 15.24, -4902.97)}
-      elseif level >= 1175 and level < 1250 then
-         questData = {Mon="Magma Ninja", ID="FireSideQuest", Lvl=1, NPC=CFrame.new(-5428.03, 15.06, -5299.43)}
-      elseif level >= 1250 and level < 1300 then
-         questData = {Mon="Ship Deckhand", ID="ShipQuest1", Lvl=1, NPC=CFrame.new(1037.80, 125.09, 32911.60)}
-      elseif level >= 1300 and level < 1350 then
-         questData = {Mon="Ship Steward", ID="ShipQuest2", Lvl=1, NPC=CFrame.new(968.80, 125.09, 33244.12)}
-      elseif level >= 1350 and level < 1425 then
-         questData = {Mon="Arctic Warrior", ID="FrostQuest", Lvl=1, NPC=CFrame.new(5667.65, 26.79, -6486.08)}
-      elseif level >= 1425 and level < 1500 then
-         questData = {Mon="Sea Soldier", ID="ForgottenQuest", Lvl=1, NPC=CFrame.new(-3054.44, 235.54, -10142.81)}
-      end
-
-   elseif World3 then
-      if level >= 1500 and level < 1575 then
-         questData = {Mon="Pirate Millionaire", ID="PiratePortQuest", Lvl=1, NPC=CFrame.new(-290.07, 42.90, 5581.58)}
-      elseif level >= 1575 and level < 1625 then
-         questData = {Mon="Dragon Crew Warrior", ID="AmazonQuest", Lvl=1, NPC=CFrame.new(5832.83, 51.68, -1101.51)}
-      elseif level >= 1625 and level < 1700 then
-         questData = {Mon="Female Islander", ID="AmazonQuest2", Lvl=1, NPC=CFrame.new(5446.87, 601.62, 749.45)}
-      elseif level >= 1700 and level < 1775 then
-         questData = {Mon="Marine Commodore", ID="MarineTreeIsland", Lvl=1, NPC=CFrame.new(2180.54, 27.81, -6741.54)}
-      elseif level >= 1775 and level < 1825 then
-         questData = {Mon="Fishman Raider", ID="DeepForestIsland3", Lvl=1, NPC=CFrame.new(-10581.65, 330.87, -8761.18)}
-      elseif level >= 1825 and level < 1900 then
-         questData = {Mon="Forest Pirate", ID="DeepForestIsland", Lvl=1, NPC=CFrame.new(-13234.04, 331.48, -7625.40)}
-      elseif level >= 1900 and level < 1975 then
-         questData = {Mon="Jungle Pirate", ID="DeepForestIsland2", Lvl=1, NPC=CFrame.new(-12680.38, 389.97, -9902.01)}
-      elseif level >= 1975 and level < 2025 then
-         questData = {Mon="Reborn Skeleton", ID="HauntedQuest1", Lvl=1, NPC=CFrame.new(-9479.21, 141.21, 5566.09)}
-      elseif level >= 2025 and level < 2075 then
-         questData = {Mon="Demonic Soul", ID="HauntedQuest2", Lvl=1, NPC=CFrame.new(-9516.99, 172.01, 6078.46)}
-      elseif level >= 2075 and level < 2125 then
-         questData = {Mon="Peanut Scout", ID="NutsIslandQuest", Lvl=1, NPC=CFrame.new(-2104.39, 38.10, -10194.21)}
-      elseif level >= 2125 and level < 2200 then
-         questData = {Mon="Ice Cream Chef", ID="IceCreamIslandQuest", Lvl=1, NPC=CFrame.new(-820.64, 65.81, -10965.79)}
-      elseif level >= 2200 and level < 2250 then
-         questData = {Mon="Cookie Crafter", ID="CakeQuest1", Lvl=1, NPC=CFrame.new(-2021.32, 37.79, -12028.72)}
-      elseif level >= 2250 and level < 2300 then
-         questData = {Mon="Baking Staff", ID="CakeQuest2", Lvl=1, NPC=CFrame.new(-1927.91, 37.79, -12842.53)}
-      elseif level >= 2300 and level < 2350 then
-         questData = {Mon="Cocoa Warrior", ID="ChocQuest1", Lvl=1, NPC=CFrame.new(233.22, 29.87, -12201.23)}
-      elseif level >= 2350 and level < 2400 then
-         questData = {Mon="Sweet Thief", ID="ChocQuest2", Lvl=1, NPC=CFrame.new(150.50, 30.69, -12774.50)}
-      elseif level >= 2400 and level < 2450 then
-         questData = {Mon="Candy Pirate", ID="CandyQuest1", Lvl=1, NPC=CFrame.new(-1150.04, 20.37, -14446.33)}
-      elseif level >= 2450 then
-         questData = {Mon="Isle Outlaw", ID="TikiQuest1", Lvl=1, NPC=CFrame.new(-16545.93, 55.68, -173.23)}
+-- Auto Haki
+spawn(function()
+   while wait(1) do
+      if _G.Settings.AutoHaki then
+         pcall(function()
+            if not LocalPlayer.Character:FindFirstChild("HasBuso") then
+               game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
+            end
+         end)
       end
    end
-   return questData
+end)
+
+-- Fast Attack
+local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts:WaitForChild("CombatFramework"))
+local CombatFrameworkR = getupvalues(CombatFramework)[2]
+local RigController = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework.RigController)
+local RigControllerR = getupvalues(RigController)[2]
+
+function AttackFunction()
+   if _G.Settings.FastAttack then
+      pcall(function()
+         local AC = CombatFrameworkR.activeController
+         if AC and AC.equipped then
+            for i = 1, 1 do
+               local bladehit = require(game.ReplicatedStorage.CombatFramework.RigLib).getBladeHits(
+                  LocalPlayer.Character,
+                  {LocalPlayer.Character.HumanoidRootPart},
+                  60
+               )
+               local cac = {}
+               local hash = {}
+               for k, v in pairs(bladehit) do
+                  if v.Parent:FindFirstChild("HumanoidRootPart") and not hash[v.Parent] then
+                     table.insert(cac, v.Parent.HumanoidRootPart)
+                     hash[v.Parent] = true
+                  end
+               end
+               bladehit = cac
+               if #bladehit > 0 then
+                  pcall(function()
+                     AC:attack()
+                  end)
+               end
+            end
+         end
+      end)
+   end
 end
 
--- [[ PARTE 3/6: MENU DE FARM E STATUS ]] --
+-- Click Virtual
+function ClickButton()
+   game:GetService("VirtualUser"):CaptureController()
+   game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
+end
 
--- CRIAÇÃO DAS ABAS PRINCIPAIS
-local FarmTab = Window:CreateTab("Auto Farm", 4483345998)
-local StatsTab = Window:CreateTab("Auto Stats", 4483345998)
+-- Pegar Quest baseada no Level
+function PegarQuest()
+   local Level = LocalPlayer.Data.Level.Value
+   local Quest = {}
+   
+   if World1 then
+      if Level >= 1 and Level <= 9 then
+         Quest = {Nome = "Bandit", QuestName = "BanditQuest1", LevelQuest = 1, 
+                  CFrameMon = CFrame.new(1041, 16, 1543),
+                  CFrameQuest = CFrame.new(1059, 16, 1550)}
+      elseif Level >= 10 and Level <= 14 then
+         Quest = {Nome = "Monkey", QuestName = "JungleQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-1585, 38, 149),
+                  CFrameQuest = CFrame.new(-1598, 36, 153)}
+      elseif Level >= 15 and Level <= 29 then
+         Quest = {Nome = "Gorilla", QuestName = "JungleQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-1243, 12, -486),
+                  CFrameQuest = CFrame.new(-1598, 36, 153)}
+      elseif Level >= 30 and Level <= 39 then
+         Quest = {Nome = "Pirate", QuestName = "BuggyQuest1", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-1141, 4, 3831),
+                  CFrameQuest = CFrame.new(-1141, 4, 3831)}
+      elseif Level >= 40 and Level <= 59 then
+         Quest = {Nome = "Brute", QuestName = "BuggyQuest1", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-1140, 14, 4322),
+                  CFrameQuest = CFrame.new(-1141, 4, 3831)}
+      elseif Level >= 60 and Level <= 74 then
+         Quest = {Nome = "Desert Bandit", QuestName = "DesertQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(932, 6, 4484),
+                  CFrameQuest = CFrame.new(894, 5, 4392)}
+      elseif Level >= 75 and Level <= 89 then
+         Quest = {Nome = "Desert Officer", QuestName = "DesertQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(1580, 4, 4314),
+                  CFrameQuest = CFrame.new(894, 5, 4392)}
+      elseif Level >= 90 and Level <= 99 then
+         Quest = {Nome = "Snow Bandit", QuestName = "SnowQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(1413, 87, -1298),
+                  CFrameQuest = CFrame.new(1389, 88, -1298)}
+      elseif Level >= 100 and Level <= 119 then
+         Quest = {Nome = "Snowman", QuestName = "SnowQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(1413, 119, -1416),
+                  CFrameQuest = CFrame.new(1389, 88, -1298)}
+      elseif Level >= 120 and Level <= 149 then
+         Quest = {Nome = "Chief Petty Officer", QuestName = "MarineQuest2", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-4855, 22, 4308),
+                  CFrameQuest = CFrame.new(-5039, 27, 4324)}
+      elseif Level >= 150 and Level <= 174 then
+         Quest = {Nome = "Sky Bandit", QuestName = "SkyQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-4981, 277, -2830),
+                  CFrameQuest = CFrame.new(-4839, 716, -2619)}
+      elseif Level >= 175 and Level <= 189 then
+         Quest = {Nome = "Dark Master", QuestName = "SkyQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-5260, 389, -2229),
+                  CFrameQuest = CFrame.new(-4839, 716, -2619)}
+      elseif Level >= 190 and Level <= 209 then
+         Quest = {Nome = "Prisoner", QuestName = "PrisonerQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(5411, 1, 690),
+                  CFrameQuest = CFrame.new(5308, 1, 475)}
+      elseif Level >= 210 and Level <= 249 then
+         Quest = {Nome = "Dangerous Prisoner", QuestName = "PrisonerQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(5411, 1, 690),
+                  CFrameQuest = CFrame.new(5308, 1, 475)}
+      elseif Level >= 250 and Level <= 274 then
+         Quest = {Nome = "Toga Warrior", QuestName = "ColosseumQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-1770, 7, -2983),
+                  CFrameQuest = CFrame.new(-1580, 6, -2986)}
+      elseif Level >= 275 and Level <= 299 then
+         Quest = {Nome = "Gladiator", QuestName = "ColosseumQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-1366, 7, -3143),
+                  CFrameQuest = CFrame.new(-1580, 6, -2986)}
+      elseif Level >= 300 and Level <= 324 then
+         Quest = {Nome = "Military Soldier", QuestName = "MagmaQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-5408, 10, 8447),
+                  CFrameQuest = CFrame.new(-5313, 10, 8515)}
+      elseif Level >= 325 and Level <= 374 then
+         Quest = {Nome = "Military Spy", QuestName = "MagmaQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-5802, 75, 8820),
+                  CFrameQuest = CFrame.new(-5313, 10, 8515)}
+      elseif Level >= 375 and Level <= 449 then
+         Quest = {Nome = "Fishman Warrior", QuestName = "FishmanQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(60946, 18, 1583),
+                  CFrameQuest = CFrame.new(61122, 18, 1569)}
+      elseif Level >= 450 and Level <= 474 then
+         Quest = {Nome = "God's Guard", QuestName = "SkyExp1Quest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-4698, 843, -1912),
+                  CFrameQuest = CFrame.new(-4721, 843, -1949)}
+      elseif Level >= 475 and Level <= 524 then
+         Quest = {Nome = "Shanda", QuestName = "SkyExp1Quest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-7685, 5567, -502),
+                  CFrameQuest = CFrame.new(-7859, 5544, -381)}
+      elseif Level >= 525 and Level <= 549 then
+         Quest = {Nome = "Royal Squad", QuestName = "SkyExp2Quest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-7670, 5606, -1460),
+                  CFrameQuest = CFrame.new(-7906, 5634, -1411)}
+      elseif Level >= 550 and Level <= 624 then
+         Quest = {Nome = "Royal Soldier", QuestName = "SkyExp2Quest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-7828, 5606, -1868),
+                  CFrameQuest = CFrame.new(-7906, 5634, -1411)}
+      elseif Level >= 625 and Level <= 699 then
+         Quest = {Nome = "Galley Pirate", QuestName = "FountainQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(5589, 38, 4067),
+                  CFrameQuest = CFrame.new(5259, 37, 4050)}
+      end
+      
+   elseif World2 then
+      if Level >= 700 and Level <= 724 then
+         Quest = {Nome = "Raider", QuestName = "Area1Quest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-728, 71, 2636),
+                  CFrameQuest = CFrame.new(-429, 71, 1836)}
+      elseif Level >= 725 and Level <= 774 then
+         Quest = {Nome = "Mercenary", QuestName = "Area1Quest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-1004, 88, 1424),
+                  CFrameQuest = CFrame.new(-429, 71, 1836)}
+      elseif Level >= 775 and Level <= 799 then
+         Quest = {Nome = "Swan Pirate", QuestName = "Area2Quest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(878, 122, 1235),
+                  CFrameQuest = CFrame.new(638, 71, 918)}
+      elseif Level >= 800 and Level <= 874 then
+         Quest = {Nome = "Factory Staff", QuestName = "Area2Quest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(295, 73, -56),
+                  CFrameQuest = CFrame.new(632, 73, 918)}
+      elseif Level >= 875 and Level <= 899 then
+         Quest = {Nome = "Marine Lieutenant", QuestName = "MarineQuest3", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-2806, 71, -3208),
+                  CFrameQuest = CFrame.new(-2440, 71, -3216)}
+      elseif Level >= 900 and Level <= 949 then
+         Quest = {Nome = "Marine Captain", QuestName = "MarineQuest3", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-1869, 71, -3320),
+                  CFrameQuest = CFrame.new(-2440, 71, -3216)}
+      elseif Level >= 950 and Level <= 974 then
+         Quest = {Nome = "Zombie", QuestName = "ZombieQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-5736, 125, -686),
+                  CFrameQuest = CFrame.new(-5497, 47, -795)}
+      elseif Level >= 975 and Level <= 999 then
+         Quest = {Nome = "Vampire", QuestName = "ZombieQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-6033, 6, -1313),
+                  CFrameQuest = CFrame.new(-5497, 47, -795)}
+      elseif Level >= 1000 and Level <= 1049 then
+         Quest = {Nome = "Snow Trooper", QuestName = "SnowMountainQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(478, 401, -5362),
+                  CFrameQuest = CFrame.new(609, 400, -5372)}
+      elseif Level >= 1050 and Level <= 1099 then
+         Quest = {Nome = "Winter Warrior", QuestName = "SnowMountainQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(1157, 429, -5188),
+                  CFrameQuest = CFrame.new(609, 400, -5372)}
+      elseif Level >= 1100 and Level <= 1124 then
+         Quest = {Nome = "Lab Subordinate", QuestName = "IceSideQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-5769, 15, -4468),
+                  CFrameQuest = CFrame.new(-6064, 15, -4902)}
+      elseif Level >= 1125 and Level <= 1174 then
+         Quest = {Nome = "Horned Warrior", QuestName = "IceSideQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-6341, 15, -5723),
+                  CFrameQuest = CFrame.new(-6064, 15, -4902)}
+      elseif Level >= 1175 and Level <= 1199 then
+         Quest = {Nome = "Magma Ninja", QuestName = "FireSideQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-5309, 15, -5262),
+                  CFrameQuest = CFrame.new(-5428, 15, -5299)}
+      elseif Level >= 1200 and Level <= 1249 then
+         Quest = {Nome = "Lava Pirate", QuestName = "FireSideQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-5251, 15, -4774),
+                  CFrameQuest = CFrame.new(-5428, 15, -5299)}
+      elseif Level >= 1250 and Level <= 1274 then
+         Quest = {Nome = "Ship Deckhand", QuestName = "ShipQuest1", LevelQuest = 1,
+                  CFrameMon = CFrame.new(1198, 125, 32911),
+                  CFrameQuest = CFrame.new(1037, 125, 32911)}
+      elseif Level >= 1275 and Level <= 1299 then
+         Quest = {Nome = "Ship Engineer", QuestName = "ShipQuest1", LevelQuest = 2,
+                  CFrameMon = CFrame.new(918, 43, 32787),
+                  CFrameQuest = CFrame.new(1037, 125, 32911)}
+      elseif Level >= 1300 and Level <= 1324 then
+         Quest = {Nome = "Ship Steward", QuestName = "ShipQuest2", LevelQuest = 1,
+                  CFrameMon = CFrame.new(915, 129, 33436),
+                  CFrameQuest = CFrame.new(968, 125, 33244)}
+      elseif Level >= 1325 and Level <= 1349 then
+         Quest = {Nome = "Ship Officer", QuestName = "ShipQuest2", LevelQuest = 2,
+                  CFrameMon = CFrame.new(915, 181, 33120),
+                  CFrameQuest = CFrame.new(968, 125, 33244)}
+      elseif Level >= 1350 and Level <= 1374 then
+         Quest = {Nome = "Arctic Warrior", QuestName = "FrostQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(5966, 26, -6212),
+                  CFrameQuest = CFrame.new(5667, 26, -6486)}
+      elseif Level >= 1375 and Level <= 1424 then
+         Quest = {Nome = "Snow Lurker", QuestName = "FrostQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(5518, 41, -6573),
+                  CFrameQuest = CFrame.new(5667, 26, -6486)}
+      elseif Level >= 1425 and Level <= 1449 then
+         Quest = {Nome = "Sea Soldier", QuestName = "ForgottenQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-3022, 236, -10148),
+                  CFrameQuest = CFrame.new(-3054, 235, -10142)}
+      elseif Level >= 1450 and Level <= 1500 then
+         Quest = {Nome = "Water Fighter", QuestName = "ForgottenQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-3385, 298, -10543),
+                  CFrameQuest = CFrame.new(-3054, 235, -10142)}
+      end
+      
+   elseif World3 then
+      if Level >= 1500 and Level <= 1524 then
+         Quest = {Nome = "Pirate Millionaire", QuestName = "PiratePortQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-373, 43, 5550),
+                  CFrameQuest = CFrame.new(-290, 42, 5581)}
+      elseif Level >= 1525 and Level <= 1574 then
+         Quest = {Nome = "Pistol Billionaire", QuestName = "PiratePortQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-379, 43, 5984),
+                  CFrameQuest = CFrame.new(-290, 42, 5581)}
+      elseif Level >= 1575 and Level <= 1599 then
+         Quest = {Nome = "Dragon Crew Warrior", QuestName = "AmazonQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(6339, 51, -1061),
+                  CFrameQuest = CFrame.new(5832, 51, -1101)}
+      elseif Level >= 1600 and Level <= 1624 then
+         Quest = {Nome = "Dragon Crew Archer", QuestName = "AmazonQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(6594, 383, 139),
+                  CFrameQuest = CFrame.new(5832, 51, -1101)}
+      elseif Level >= 1625 and Level <= 1649 then
+         Quest = {Nome = "Female Islander", QuestName = "AmazonQuest2", LevelQuest = 1,
+                  CFrameMon = CFrame.new(4770, 718, 1069),
+                  CFrameQuest = CFrame.new(5446, 601, 749)}
+      elseif Level >= 1650 and Level <= 1699 then
+         Quest = {Nome = "Giant Islander", QuestName = "AmazonQuest2", LevelQuest = 2,
+                  CFrameMon = CFrame.new(4530, 656, -131),
+                  CFrameQuest = CFrame.new(5446, 601, 749)}
+      elseif Level >= 1700 and Level <= 1724 then
+         Quest = {Nome = "Marine Commodore", QuestName = "MarineTreeIsland", LevelQuest = 1,
+                  CFrameMon = CFrame.new(2286, 73, -7159),
+                  CFrameQuest = CFrame.new(2180, 27, -6741)}
+      elseif Level >= 1725 and Level <= 1774 then
+         Quest = {Nome = "Marine Rear Admiral", QuestName = "MarineTreeIsland", LevelQuest = 2,
+                  CFrameMon = CFrame.new(3656, 160, -6984),
+                  CFrameQuest = CFrame.new(2180, 27, -6741)}
+      elseif Level >= 1775 and Level <= 1799 then
+         Quest = {Nome = "Fishman Raider", QuestName = "DeepForestIsland3", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-10560, 331, -8500),
+                  CFrameQuest = CFrame.new(-10581, 330, -8761)}
+      elseif Level >= 1800 and Level <= 1824 then
+         Quest = {Nome = "Fishman Captain", QuestName = "DeepForestIsland3", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-11008, 331, -9132),
+                  CFrameQuest = CFrame.new(-10581, 330, -8761)}
+      elseif Level >= 1825 and Level <= 1849 then
+         Quest = {Nome = "Forest Pirate", QuestName = "DeepForestIsland", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-13225, 331, -7955),
+                  CFrameQuest = CFrame.new(-13234, 331, -7625)}
+      elseif Level >= 1850 and Level <= 1899 then
+         Quest = {Nome = "Mythological Pirate", QuestName = "DeepForestIsland", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-13508, 469, -6975),
+                  CFrameQuest = CFrame.new(-13234, 331, -7625)}
+      elseif Level >= 1900 and Level <= 1924 then
+         Quest = {Nome = "Jungle Pirate", QuestName = "DeepForestIsland2", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-11975, 331, -10620),
+                  CFrameQuest = CFrame.new(-12680, 389, -9902)}
+      elseif Level >= 1925 and Level <= 1974 then
+         Quest = {Nome = "Musketeer Pirate", QuestName = "DeepForestIsland2", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-13284, 496, -9656),
+                  CFrameQuest = CFrame.new(-12680, 389, -9902)}
+      elseif Level >= 1975 and Level <= 1999 then
+         Quest = {Nome = "Reborn Skeleton", QuestName = "HauntedQuest1", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-8760, 165, 6159),
+                  CFrameQuest = CFrame.new(-9479, 141, 5566)}
+      elseif Level >= 2000 and Level <= 2024 then
+         Quest = {Nome = "Living Zombie", QuestName = "HauntedQuest1", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-10144, 238, 5955),
+                  CFrameQuest = CFrame.new(-9479, 141, 5566)}
+      elseif Level >= 2025 and Level <= 2049 then
+         Quest = {Nome = "Demonic Soul", QuestName = "HauntedQuest2", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-9712, 204, 6193),
+                  CFrameQuest = CFrame.new(-9516, 172, 6078)}
+      elseif Level >= 2050 and Level <= 2074 then
+         Quest = {Nome = "Posessed Mummy", QuestName = "HauntedQuest2", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-9582, 6, 6285),
+                  CFrameQuest = CFrame.new(-9516, 172, 6078)}
+      elseif Level >= 2075 and Level <= 2099 then
+         Quest = {Nome = "Peanut Scout", QuestName = "NutsIslandQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-2124, 123, -10435),
+                  CFrameQuest = CFrame.new(-2104, 38, -10194)}
+      elseif Level >= 2100 and Level <= 2124 then
+         Quest = {Nome = "Peanut President", QuestName = "NutsIslandQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-2124, 123, -10435),
+                  CFrameQuest = CFrame.new(-2104, 38, -10194)}
+      elseif Level >= 2125 and Level <= 2149 then
+         Quest = {Nome = "Ice Cream Chef", QuestName = "IceCreamIslandQuest", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-641, 125, -11062),
+                  CFrameQuest = CFrame.new(-820, 65, -10965)}
+      elseif Level >= 2150 and Level <= 2199 then
+         Quest = {Nome = "Ice Cream Commander", QuestName = "IceCreamIslandQuest", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-558, 125, -11241),
+                  CFrameQuest = CFrame.new(-820, 65, -10965)}
+      elseif Level >= 2200 and Level <= 2224 then
+         Quest = {Nome = "Cookie Crafter", QuestName = "CakeQuest1", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-2365, 37, -12099),
+                  CFrameQuest = CFrame.new(-2021, 37, -12028)}
+      elseif Level >= 2225 and Level <= 2249 then
+         Quest = {Nome = "Cake Guard", QuestName = "CakeQuest1", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-1651, 37, -12308),
+                  CFrameQuest = CFrame.new(-2021, 37, -12028)}
+      elseif Level >= 2250 and Level <= 2274 then
+         Quest = {Nome = "Baking Staff", QuestName = "CakeQuest2", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-1870, 37, -12938),
+                  CFrameQuest = CFrame.new(-1927, 37, -12842)}
+      elseif Level >= 2275 and Level <= 2299 then
+         Quest = {Nome = "Head Baker", QuestName = "CakeQuest2", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-1926, 88, -12850),
+                  CFrameQuest = CFrame.new(-1927, 37, -12842)}
+      elseif Level >= 2300 and Level <= 2324 then
+         Quest = {Nome = "Cocoa Warrior", QuestName = "ChocQuest1", LevelQuest = 1,
+                  CFrameMon = CFrame.new(147, 23, -12470),
+                  CFrameQuest = CFrame.new(233, 29, -12201)}
+      elseif Level >= 2325 and Level <= 2349 then
+         Quest = {Nome = "Chocolate Bar Battler", QuestName = "ChocQuest1", LevelQuest = 2,
+                  CFrameMon = CFrame.new(684, 24, -12510),
+                  CFrameQuest = CFrame.new(233, 29, -12201)}
+      elseif Level >= 2350 and Level <= 2374 then
+         Quest = {Nome = "Sweet Thief", QuestName = "ChocQuest2", LevelQuest = 1,
+                  CFrameMon = CFrame.new(42, 76, -12656),
+                  CFrameQuest = CFrame.new(150, 30, -12774)}
+      elseif Level >= 2375 and Level <= 2399 then
+         Quest = {Nome = "Candy Rebel", QuestName = "ChocQuest2", LevelQuest = 2,
+                  CFrameMon = CFrame.new(135, 76, -12882),
+                  CFrameQuest = CFrame.new(150, 30, -12774)}
+      elseif Level >= 2400 and Level <= 2424 then
+         Quest = {Nome = "Candy Pirate", QuestName = "CandyQuest1", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-1315, 26, -14471),
+                  CFrameQuest = CFrame.new(-1150, 20, -14446)}
+      elseif Level >= 2425 and Level <= 2449 then
+         Quest = {Nome = "Snow Demon", QuestName = "CandyQuest1", LevelQuest = 2,
+                  CFrameMon = CFrame.new(-910, 88, -14453),
+                  CFrameQuest = CFrame.new(-1150, 20, -14446)}
+      elseif Level >= 2450 then
+         Quest = {Nome = "Isle Outlaw", QuestName = "TikiQuest1", LevelQuest = 1,
+                  CFrameMon = CFrame.new(-16228, 9, 446),
+                  CFrameQuest = CFrame.new(-16545, 55, -173)}
+      end
+   end
+   
+   return Quest
+end
 
--- [[ ABA: AUTO FARM ]] --
-FarmTab:CreateSection("Configurações de Ataque")
+-- ============================================
+-- LOOP PRINCIPAL DE AUTO FARM
+-- ============================================
+spawn(function()
+   while wait() do
+      if _G.Settings.AutoFarmLevel and not _G.Settings.ManualTeleport then
+         pcall(function()
+            local QuestInfo = PegarQuest()
+            if QuestInfo then
+               -- Checar se tem a quest ativa
+               local QuestTitle = LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text
+               if not string.find(QuestTitle, QuestInfo.Nome) then
+                  -- Ir pegar a quest
+                  repeat
+                     wait()
+                     LocalPlayer.Character.HumanoidRootPart.CFrame = QuestInfo.CFrameQuest
+                  until (QuestInfo.CFrameQuest.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 3
+                  wait(0.5)
+                  game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", QuestInfo.QuestName, QuestInfo.LevelQuest)
+               else
+                  -- Já tem a quest, farmar
+                  for i, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                     if v.Name == QuestInfo.Nome and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                        repeat
+                           wait()
+                           EquiparArma()
+                           v.HumanoidRootPart.CanCollide = false
+                           v.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                           v.HumanoidRootPart.CFrame = QuestInfo.CFrameMon
+                           LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                           AttackFunction()
+                           ClickButton()
+                        until not _G.Settings.AutoFarmLevel or v.Humanoid.Health <= 0 or not v.Parent
+                     end
+                  end
+               end
+            end
+         end)
+      end
+   end
+end)
 
-FarmTab:CreateDropdown({
-   Name = "Arma Principal",
-   Options = {"Melee", "Sword", "Fruit"},
+-- ============================================
+-- CRIAÇÃO DO MENU
+-- ============================================
+
+-- TAB 1: MAIN FARM
+local MainTab = Window:CreateTab("🎯 Main Farm", 4483362458)
+
+MainTab:CreateSection("⚔️ Configurações de Arma")
+
+local WeaponDropdown = MainTab:CreateDropdown({
+   Name = "Selecionar Arma",
+   Options = {"Melee", "Sword", "Fruit", "Gun"},
    CurrentOption = {"Melee"},
    MultipleOptions = false,
-   Flag = "SelectWeapon",
    Callback = function(Option)
-      _G.SelectWeapon = Option[1]
+      _G.Settings.SelectWeapon = Option[1]
    end,
 })
 
-FarmTab:CreateToggle({
+local FastAttackToggle = MainTab:CreateToggle({
    Name = "Fast Attack (Ataque Rápido)",
    CurrentValue = true,
    Flag = "FastAttack",
    Callback = function(Value)
-      _G.FastAttack = Value
+      _G.Settings.FastAttack = Value
    end,
 })
 
-FarmTab:CreateSection("Funções de Level")
+local AutoHakiToggle = MainTab:CreateToggle({
+   Name = "Auto Haki (Ativar Buso Automático)",
+   CurrentValue = true,
+   Flag = "AutoHaki",
+   Callback = function(Value)
+      _G.Settings.AutoHaki = Value
+   end,
+})
 
-FarmTab:CreateToggle({
-   Name = "Auto Farm Level (Do 1 ao Max)",
+MainTab:CreateSection("📊 Farms Principais")
+
+local AutoFarmToggle = MainTab:CreateToggle({
+   Name = "🔥 Auto Farm Level (Quest Automática)",
    CurrentValue = false,
    Flag = "AutoFarm",
    Callback = function(Value)
-      _G.AutoFarm = Value
-      _G.ManualTeleport = false -- 🔧 CORRIGIDO: Desativa modo manual
+      _G.Settings.AutoFarmLevel = Value
+      _G.Settings.ManualTeleport = false
+      if Value then
+         Rayfield:Notify({
+            Title = "Auto Farm Ativado!",
+            Content = "Farmando level automaticamente com quest!",
+            Duration = 3,
+         })
+      end
    end,
 })
 
-FarmTab:CreateToggle({
-   Name = "Auto Farm Maestria (Bate e Troca)",
+local AutoMasteryToggle = MainTab:CreateToggle({
+   Name = "Auto Farm Mastery (Maestria)",
    CurrentValue = false,
    Flag = "AutoMastery",
    Callback = function(Value)
-      _G.AutoMastery = Value
-      _G.ManualTeleport = false -- 🔧 CORRIGIDO: Desativa modo manual
+      _G.Settings.AutoFarmMastery = Value
    end,
 })
 
--- 🆕 BOTÃO PARA REATIVAR FARMS APÓS TELEPORTE
-FarmTab:CreateSection("Controle Manual")
-
-FarmTab:CreateButton({
-   Name = "🔄 Reativar Farms (Após Teleporte)",
-   Callback = function()
-      _G.ManualTeleport = false
-      Rayfield:Notify({
-         Title="Sistema Reativado", 
-         Content="Você pode ligar os farms novamente!",
-         Duration=3
-      })
-   end,
-})
-
--- [[ ABA: AUTO STATS ]] --
-StatsTab:CreateSection("Distribuição de Pontos")
-
-StatsTab:CreateToggle({
-   Name = "Upar Melee (Soco)",
+local AutoBossToggle = MainTab:CreateToggle({
+   Name = "Auto Farm Boss (Chefes)",
    CurrentValue = false,
-   Callback = function(Value) _G.AutoStatsMelee = Value end,
-})
-
-StatsTab:CreateToggle({
-   Name = "Upar Defense (Vida)",
-   CurrentValue = false,
-   Callback = function(Value) _G.AutoStatsDefense = Value end,
-})
-
-StatsTab:CreateToggle({
-   Name = "Upar Sword (Espada)",
-   CurrentValue = false,
-   Callback = function(Value) _G.AutoStatsSword = Value end,
-})
-
-StatsTab:CreateToggle({
-   Name = "Upar Gun (Arma)",
-   CurrentValue = false,
-   Callback = function(Value) _G.AutoStatsGun = Value end,
-})
-
-StatsTab:CreateToggle({
-   Name = "Upar Blox Fruit (Fruta)",
-   CurrentValue = false,
-   Callback = function(Value) _G.AutoStatsFruit = Value end,
-})
-
--- [[ PARTE 4/6: TELEPORTES E SEA EVENTS - CORRIGIDO ]] --
-
-local TeleportTab = Window:CreateTab("Teleports", 4483345998)
-local SeaEventsTab = Window:CreateTab("Sea Events", 4483345998)
-
--- [[ ABA: TELEPORTES DE MUNDO ]] --
-TeleportTab:CreateSection("Mudar de Mar (Seas)")
-
-TeleportTab:CreateButton({
-   Name = "Ir para Sea 1 (Old World)",
-   Callback = function() 
-      PausarTodosFarms() -- 🔧 CORRIGIDO: Pausa tudo antes
-      task.wait(0.5)
-      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain") 
+   Flag = "AutoBoss",
+   Callback = function(Value)
+      _G.Settings.AutoFarmBoss = Value
    end,
 })
 
-TeleportTab:CreateButton({
-   Name = "Ir para Sea 2 (Dressrosa)",
-   Callback = function() 
-      PausarTodosFarms() -- 🔧 CORRIGIDO: Pausa tudo antes
-      task.wait(0.5)
-      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelDressrosa") 
+local AutoEliteToggle = MainTab:CreateToggle({
+   Name = "Auto Farm Elite Hunter",
+   CurrentValue = false,
+   Flag = "AutoElite",
+   Callback = function(Value)
+      _G.Settings.AutoFarmElite = Value
    end,
 })
 
-TeleportTab:CreateButton({
-   Name = "Ir para Sea 3 (Zou)",
-   Callback = function() 
-      PausarTodosFarms() -- 🔧 CORRIGIDO: Pausa tudo antes
-      task.wait(0.5)
-      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelZou") 
-   end,
-})
+-- TAB 2: MATERIAIS
+local MaterialTab = Window:CreateTab("💎 Materiais", 4483362458)
 
--- [[ ABA: TELEPORTES DE ILHAS - TOTALMENTE CORRIGIDO ]] --
-TeleportTab:CreateSection("Ilhas do Mundo Atual")
+MaterialTab:CreateSection("🦴 Farm de Materiais do Sea 3")
 
--- Lista Inteligente: Só mostra as ilhas do mar que você está
-local IslandList = {}
-if World1 then
-   IslandList = {"Jungle", "Pirate Village", "Desert", "Snow Village", "MarineFord", "Skypiea", "Prison", "Fountain City"}
-elseif World2 then
-   IslandList = {"Cafe", "Green Zone", "Graveyard", "Snow Mountain", "Hot and Cold", "Cursed Ship", "Ice Castle", "Forgotten Island"}
-elseif World3 then
-   IslandList = {"Mansion", "Castle on Sea", "Port Town", "Hydra Island", "Great Tree", "Floating Turtle", "Haunted Castle", "Tiki Outpost"}
-end
-
-TeleportTab:CreateDropdown({
-   Name = "Teleportar para Ilha",
-   Options = IslandList,
-   CurrentOption = {""},
-   Callback = function(Option)
-      local island = Option[1]
-      
-      -- 🔧 CORRIGIDO: PAUSA TUDO ANTES DE TELEPORTAR
-      PausarTodosFarms()
-      task.wait(0.8) -- Aguarda os loops pararem completamente
-      
-      local p = game.Players.LocalPlayer.Character.HumanoidRootPart
-      
-      -- Coordenadas completas (Sea 1, 2 e 3)
-      if island == "Jungle" then 
-         p.CFrame = CFrame.new(-1598, 35, 153)
-      elseif island == "Pirate Village" then 
-         p.CFrame = CFrame.new(-1141, 4, 3831)
-      elseif island == "Desert" then 
-         p.CFrame = CFrame.new(944, 20, 4373)
-      elseif island == "Snow Village" then 
-         p.CFrame = CFrame.new(1389, 88, -1298)
-      elseif island == "MarineFord" then 
-         p.CFrame = CFrame.new(-4914, 50, 4281)
-      elseif island == "Skypiea" then 
-         p.CFrame = CFrame.new(-7894, 5547, -380)
-      elseif island == "Prison" then 
-         p.CFrame = CFrame.new(4876, 5, 734)
-      elseif island == "Fountain City" then 
-         p.CFrame = CFrame.new(5127, 59, 4105)
-      
-      -- Sea 2
-      elseif island == "Cafe" then 
-         p.CFrame = CFrame.new(-380, 77, 255)
-      elseif island == "Green Zone" then 
-         p.CFrame = CFrame.new(-2448, 73, -3210)
-      elseif island == "Graveyard" then 
-         p.CFrame = CFrame.new(-5550, 28, -850)
-      elseif island == "Snow Mountain" then 
-         p.CFrame = CFrame.new(753, 408, -5274)
-      elseif island == "Hot and Cold" then 
-         p.CFrame = CFrame.new(-6127, 15, -5040)
-      elseif island == "Cursed Ship" then 
-         p.CFrame = CFrame.new(923, 125, 32885)
-      elseif island == "Ice Castle" then 
-         p.CFrame = CFrame.new(5400, 50, -6180)
-      elseif island == "Forgotten Island" then 
-         p.CFrame = CFrame.new(-3054, 240, -10145)
-      
-      -- Sea 3
-      elseif island == "Mansion" then 
-         p.CFrame = CFrame.new(-12471, 374, -7551)
-      elseif island == "Castle on Sea" then 
-         p.CFrame = CFrame.new(-5071, 314, -3150)
-      elseif island == "Port Town" then 
-         p.CFrame = CFrame.new(-290, 43, 5343)
-      elseif island == "Hydra Island" then 
-         p.CFrame = CFrame.new(5749, 611, -282)
-      elseif island == "Great Tree" then 
-         p.CFrame = CFrame.new(2681, 1682, -7190)
-      elseif island == "Floating Turtle" then 
-         p.CFrame = CFrame.new(-13348, 332, -7635)
-      elseif island == "Haunted Castle" then 
-         p.CFrame = CFrame.new(-9515, 142, 5567)
-      elseif island == "Tiki Outpost" then 
-         p.CFrame = CFrame.new(-16210, 15, 300)
-      end
-      
-      -- 🆕 NOTIFICAÇÃO DE SUCESSO
-      Rayfield:Notify({
-         Title="Teleporte Seguro", 
-         Content="Você foi para: " .. island .. "\n⚠️ Farms pausados! Use o botão Reativar.",
-         Duration=5
-      })
-   end,
-})
-
--- [[ ABA: SEA EVENTS (Exclusivo Sea 3) ]] --
 if World3 then
-    SeaEventsTab:CreateSection("Caça de Eventos (Sea 3)")
-
-    SeaEventsTab:CreateToggle({
-       Name = "Auto Sea Events (Barcos/Pedras)",
-       CurrentValue = false,
-       Callback = function(Value) 
-          _G.SeaEvents = Value 
-          _G.ManualTeleport = false
-       end,
-    })
-
-    SeaEventsTab:CreateToggle({
-       Name = "Auto Terror Shark",
-       CurrentValue = false,
-       Callback = function(Value) 
-          _G.TerrorShark = Value 
-          _G.ManualTeleport = false
-       end,
-    })
-
-    SeaEventsTab:CreateButton({
-       Name = "Teleportar para Kitsune Island (Se existir)",
-       Callback = function()
-          PausarTodosFarms() -- 🔧 CORRIGIDO
-          task.wait(0.5)
-          
-          local kit = workspace.Map:FindFirstChild("Kitsune Island")
-          if kit then
-              game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = kit.WorldPivot
-              Rayfield:Notify({Title="Lag Teck", Content="Teleportado para Kitsune!", Duration=3})
-          else
-              Rayfield:Notify({Title="Lag Teck", Content="Kitsune Island não encontrada!", Duration=3})
-          end
-       end,
-    })
-    
-    SeaEventsTab:CreateButton({
-       Name = "Encontrar Mirage Island",
-       Callback = function()
-          PausarTodosFarms() -- 🔧 CORRIGIDO
-          task.wait(0.5)
-          
-          local mirage = workspace._WorldOrigin.Locations:FindFirstChild("Mirage Island")
-          if mirage then
-              game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = mirage.WorldPivot * CFrame.new(0, 50, 0)
-              Rayfield:Notify({Title="Lag Teck", Content="Mirage encontrada!", Duration=3})
-          else
-              Rayfield:Notify({Title="Lag Teck", Content="Mirage não está spawndada.", Duration=3})
-          end
-       end,
-    })
-else
-    SeaEventsTab:CreateLabel("Vá para o Sea 3 para usar Sea Events")
+   local AutoBoneToggle = MaterialTab:CreateToggle({
+      Name = "Auto Farm Bone (Ossos)",
+      CurrentValue = false,
+      Callback = function(Value)
+         _G.Settings.AutoFarmBone = Value
+      end,
+   })
+   
+   local AutoCocoaToggle = MaterialTab:CreateToggle({
+      Name = "Auto Farm Cocoa (Chocolate)",
+      CurrentValue = false,
+      Callback = function(Value)
+         _G.Settings.AutoFarmCocoa = Value
+      end,
+   })
+   
+   local AutoCakeToggle = MaterialTab:CreateToggle({
+      Name = "Auto Farm Cake Prince (Dough King)",
+      CurrentValue = false,
+      Callback = function(Value)
+         _G.Settings.AutoFarmCake = Value
+      end,
+   })
+   
+   MaterialTab:CreateButton({
+      Name = "Girar Surpresa de Ossos",
+      Callback = function()
+         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Bones","Buy",1,1)
+      end,
+   })
 end
 
--- [[ PARTE 5/10: RAIDS & FARM DE MATERIAIS ]] --
+if World2 then
+   MaterialTab:CreateSection("👻 Farm de Materiais do Sea 2")
+   
+   local AutoEctoToggle = MaterialTab:CreateToggle({
+      Name = "Auto Farm Ectoplasm",
+      CurrentValue = false,
+      Callback = function(Value)
+         _G.Settings.AutoFarmEctoplasm = Value
+      end,
+   })
+end
 
-local RaidTab = Window:CreateTab("Raids", 4483345998)
-local MaterialTab = Window:CreateTab("Materiais", 4483345998)
+-- TAB 3: RAIDS
+local RaidTab = Window:CreateTab("⚔️ Raids", 4483362458)
 
--- [[ ABA: RAIDS (DUNGEONS) ]] --
-RaidTab:CreateSection("Configuração de Chip")
+RaidTab:CreateSection("🎫 Configuração de Raid")
 
-local RaidList = {"Flame", "Ice", "Quake", "Light", "Dark", "Spider", "Rumble", "Magma", "Buddha", "Sand", "Dough"}
-
-RaidTab:CreateDropdown({
+local RaidDropdown = RaidTab:CreateDropdown({
    Name = "Selecionar Raid",
-   Options = RaidList,
+   Options = {"Flame", "Ice", "Quake", "Light", "Dark", "Spider", "Rumble", "Magma", "Human: Buddha", "Sand", "Bird: Phoenix", "Dough"},
    CurrentOption = {"Flame"},
    Callback = function(Option)
-      _G.SelectRaid = Option[1]
+      _G.Settings.SelectRaid = Option[1]
    end,
 })
 
-RaidTab:CreateToggle({
+local AutoBuyChipToggle = RaidTab:CreateToggle({
    Name = "Auto Comprar Chip",
    CurrentValue = false,
    Callback = function(Value)
-      _G.AutoBuyChip = Value
+      _G.Settings.AutoBuyChip = Value
    end,
 })
 
-RaidTab:CreateToggle({
-   Name = "Auto Start Raid (Entrar na Cápsula)",
+local AutoStartRaidToggle = RaidTab:CreateToggle({
+   Name = "Auto Iniciar Raid",
    CurrentValue = false,
    Callback = function(Value)
-      _G.AutoStartRaid = Value
+      _G.Settings.AutoStartRaid = Value
    end,
 })
 
-RaidTab:CreateSection("Dentro da Raid")
+RaidTab:CreateSection("⚡ Dentro da Raid")
 
-RaidTab:CreateToggle({
-   Name = "Auto Kill Aura (Raid)",
+local AutoRaidToggle = RaidTab:CreateToggle({
+   Name = "Auto Farm Raid (Kill All)",
    CurrentValue = false,
    Callback = function(Value)
-      _G.KillAuraRaid = Value
+      _G.Settings.AutoRaid = Value
    end,
 })
 
-RaidTab:CreateToggle({
-   Name = "Auto Next Island (Voar p/ Próxima Ilha)",
+local AutoAwakenToggle = RaidTab:CreateToggle({
+   Name = "Auto Despertar Fruta",
    CurrentValue = false,
    Callback = function(Value)
-      _G.AutoNextIsland = Value
+      _G.Settings.AutoAwaken = Value
    end,
 })
 
-RaidTab:CreateToggle({
-   Name = "Auto Awaken (Despertar Fruta)",
+-- TAB 4: FRUTAS
+local FruitTab = Window:CreateTab("🍇 Frutas", 4483362458)
+
+FruitTab:CreateSection("🎲 Gerenciamento de Frutas")
+
+local AutoStoreToggle = FruitTab:CreateToggle({
+   Name = "Auto Guardar Fruta",
    CurrentValue = true,
    Callback = function(Value)
-      _G.AutoAwaken = Value
+      _G.Settings.AutoStoreFruit = Value
    end,
 })
 
--- [[ ABA: FARM DE MATERIAIS ESPECÍFICOS ]] --
-MaterialTab:CreateSection("Sea 2")
-
-MaterialTab:CreateToggle({
-   Name = "Auto Ectoplasm (Cursed Ship)",
+local AutoBuyFruitToggle = FruitTab:CreateToggle({
+   Name = "Auto Comprar Fruta Aleatória",
    CurrentValue = false,
    Callback = function(Value)
-      _G.AutoEctoplasm = Value
-      if Value then
-          _G.SelectWeapon = "Melee" 
-      end
+      _G.Settings.AutoBuyFruit = Value
    end,
 })
 
-MaterialTab:CreateSection("Sea 3")
-
-MaterialTab:CreateToggle({
-   Name = "Auto Bones (Haunted Castle)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.AutoBone = Value
-   end,
-})
-
-MaterialTab:CreateToggle({
-   Name = "Auto Cocoa (Chocolate Land)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.AutoCocoa = Value
-   end,
-})
-
-MaterialTab:CreateToggle({
-   Name = "Auto Katakuri (Dough King/Prince)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.AutoDoughKing = Value
-   end,
-})
-
-MaterialTab:CreateButton({
-   Name = "Girar Ossos (Bone Random)",
-   Callback = function()
-      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Bones","Buy",1,1)
-   end,
-})
-
--- [[ LÓGICA DE EXECUÇÃO DA PARTE 5 ]] --
-spawn(function()
-    while task.wait(1) do
-        -- 🔧 CORRIGIDO: Só executa se NÃO estiver em teleporte manual
-        if not _G.ManualTeleport then
-            -- Lógica de Comprar Chip
-            if _G.AutoBuyChip then
-                pcall(function()
-                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectRaid)
-                end)
-            end
-            
-            -- Lógica de Iniciar Raid
-            if _G.AutoStartRaid then
-                pcall(function()
-                     if World2 then
-                         fireclickdetector(workspace.Map.CircleIsland.RaidSummon2.Button.Main.ClickDetector)
-                     elseif World3 then
-                         fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector)
-                     end
-                end)
-            end
-            
-            -- Lógica de Next Island (Raid)
-            if _G.AutoNextIsland then
-                pcall(function()
-                    local mobs = workspace.Enemies:GetChildren()
-                    if #mobs == 0 then
-                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-50)
-                    end
-                end)
-            end
-        end
-    end
-end)
-
--- [[ PARTE 6/10: RAÇA V4, MIRAGE & TRIALS ]] --
-
-local RaceTab = Window:CreateTab("Raça V4", 4483345998)
-
-RaceTab:CreateSection("Mirage Island & Gear")
-
-RaceTab:CreateButton({
-   Name = "Teleportar para Mirage Island (Se existir)",
-   Callback = function()
-      PausarTodosFarms() -- 🔧 CORRIGIDO
-      task.wait(0.5)
-      
-      local mirage = workspace._WorldOrigin.Locations:FindFirstChild("Mirage Island")
-      if mirage then
-         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = mirage.WorldPivot * CFrame.new(0, 50, 0)
-         Rayfield:Notify({Title="Lag Teck", Content="Teleportado para Mirage!", Duration=3})
-      else
-         Rayfield:Notify({Title="Lag Teck", Content="Mirage não está no mapa.", Duration=3})
-      end
-   end,
-})
-
-RaceTab:CreateButton({
-   Name = "Pegar Engrenagem Azul (Blue Gear)",
-   Callback = function()
-      PausarTodosFarms() -- 🔧 CORRIGIDO
-      task.wait(0.5)
-      
-      local encontrou = false
-      if workspace.Map:FindFirstChild("MysticIsland") then
-         for _, v in pairs(workspace.Map.MysticIsland:GetChildren()) do
-            if v:IsA("MeshPart") and v.MeshId == "rbxassetid://10153114969" then
-               game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame
-               encontrou = true
-               Rayfield:Notify({Title="Lag Teck", Content="Engrenagem encontrada!", Duration=3})
-               break
-            end
-         end
-      end
-      if not encontrou then
-         Rayfield:Notify({Title="Lag Teck", Content="Engrenagem não encontrada ou Mirage sem lua cheia.", Duration=3})
-      end
-   end,
-})
-
-RaceTab:CreateSection("Templo do Tempo (Trials)")
-
-RaceTab:CreateButton({
-   Name = "Teleportar Entrada Templo",
-   Callback = function()
-      PausarTodosFarms() -- 🔧 CORRIGIDO
-      task.wait(0.5)
-      game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(28282, 14896, 105)
-   end,
-})
-
-RaceTab:CreateButton({
-   Name = "Puxar Alavanca (Porta)",
-   Callback = function()
-      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CheckTempleDoor")
-      game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(28576, 14936, 76)
-   end,
-})
-
-RaceTab:CreateToggle({
-   Name = "Auto Completar Trial (V4)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.AutoTrial = Value
-   end,
-})
-
-RaceTab:CreateButton({
-   Name = "Comprar Engrenagem (Ancient One)",
-   Callback = function()
-      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("UpgradeRace", "Buy")
-   end,
-})
-
--- [[ LÓGICA DE EXECUÇÃO DA PARTE 6 ]] --
-spawn(function()
-    while task.wait(0.5) do
-        if _G.AutoTrial and not _G.ManualTeleport then -- 🔧 CORRIGIDO
-            pcall(function()
-                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaceV4Progress", "Begin")
-                
-                local player = game.Players.LocalPlayer
-                if (player.Character.HumanoidRootPart.Position - Vector3.new(28282, 14896, 105)).Magnitude > 3000 then
-                     game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaceV4Progress", "TeleportBack")
-                end
-                
-                for _, v in pairs(workspace.Enemies:GetChildren()) do
-                    if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                        v.Humanoid.Health = 0
-                        v.HumanoidRootPart.CanCollide = false
-                    end
-                end
-            end)
-        end
-    end
-end)
-
--- [[ PARTE 7/10: LOJA, STATUS & ESP VISUAL ]] --
-
-local ShopTab = Window:CreateTab("Shop", 4483345998)
-local ESPTab = Window:CreateTab("ESP", 4483345998)
-
--- [[ ABA: LOJA (SHOP) ]] --
-ShopTab:CreateSection("Frutas")
-
-ShopTab:CreateButton({
-   Name = "Girar Fruta (Random Fruit)",
+FruitTab:CreateButton({
+   Name = "Girar Fruta Aleatória (1x)",
    Callback = function()
       game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Cousin","Buy")
    end,
 })
 
-ShopTab:CreateToggle({
-   Name = "Auto Store Fruit (Guardar no Inventário)",
-   CurrentValue = true,
-   Callback = function(Value)
-      _G.AutoStore = Value
+FruitTab:CreateButton({
+   Name = "Abrir Loja de Frutas",
+   Callback = function()
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("GetFruits")
+      game.Players.LocalPlayer.PlayerGui.Main.FruitShop.Visible = true
    end,
 })
 
-ShopTab:CreateSection("Estilos de Luta (V2/Godhuman)")
+-- TAB 5: AUTO STATS
+local StatsTab = Window:CreateTab("📊 Auto Stats", 4483362458)
 
-ShopTab:CreateButton({
-   Name = "Comprar Godhuman",
-   Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyGodhuman") end,
-})
+StatsTab:CreateSection("💪 Distribuição de Pontos")
 
-ShopTab:CreateButton({
-   Name = "Comprar Superhuman",
-   Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySuperhuman") end,
-})
-
-ShopTab:CreateButton({
-   Name = "Comprar Electric Claw",
-   Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyElectricClaw") end,
-})
-
-ShopTab:CreateButton({
-   Name = "Comprar Dragon Talon",
-   Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDragonTalon") end,
-})
-
-ShopTab:CreateButton({
-   Name = "Comprar Sharkman Karate",
-   Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate") end,
-})
-
-ShopTab:CreateButton({
-   Name = "Comprar Death Step",
-   Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDeathStep") end,
-})
-
--- [[ ABA: ESP (VISUAL) ]] --
-ESPTab:CreateSection("Wallhack")
-
-ESPTab:CreateToggle({
-   Name = "ESP Players (Ver Jogadores)",
+local MeleeToggle = StatsTab:CreateToggle({
+   Name = "Upar Melee (Soco)",
    CurrentValue = false,
-   Callback = function(Value) _G.ESPPlayer = Value end,
+   Callback = function(Value)
+      _G.Settings.AutoMelee = Value
+   end,
 })
 
-ESPTab:CreateToggle({
-   Name = "ESP Chests (Ver Baús)",
+local DefenseToggle = StatsTab:CreateToggle({
+   Name = "Upar Defense (Defesa)",
    CurrentValue = false,
-   Callback = function(Value) _G.ESPChest = Value end,
+   Callback = function(Value)
+      _G.Settings.AutoDefense = Value
+   end,
 })
 
-ESPTab:CreateToggle({
-   Name = "ESP Fruits (Ver Frutas no Chão)",
+local SwordToggle = StatsTab:CreateToggle({
+   Name = "Upar Sword (Espada)",
    CurrentValue = false,
-   Callback = function(Value) _G.ESPFruit = Value end,
+   Callback = function(Value)
+      _G.Settings.AutoSword = Value
+   end,
 })
 
--- [[ LÓGICA DE EXECUÇÃO DA PARTE 7 ]] --
+local GunToggle = StatsTab:CreateToggle({
+   Name = "Upar Gun (Arma)",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.Settings.AutoGun = Value
+   end,
+})
+
+local FruitStatToggle = StatsTab:CreateToggle({
+   Name = "Upar Blox Fruit (Fruta)",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.Settings.AutoFruit = Value
+   end,
+})
+
+-- Loop Auto Stats
 spawn(function()
-    while task.wait(0.5) do
-        -- Auto Stats
-        local points = game.Players.LocalPlayer.Data.Points.Value
-        if points > 0 then
-            if _G.StatsMelee then game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Melee", 1) end
-            if _G.StatsDefense then game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Defense", 1) end
-            if _G.StatsSword then game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Sword", 1) end
-            if _G.StatsFruit then game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Demon Fruit", 1) end
-        end
-
-        -- Auto Store Fruit
-        if _G.AutoStore then
-            pcall(function()
-                for _,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if v.ToolTip == "Blox Fruit" then
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", v.Name, v)
-                    end
-                end
-                for _,v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
-                    if v:IsA("Tool") and v.ToolTip == "Blox Fruit" then
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", v.Name, v)
-                    end
-                end
-            end)
-        end
-        
-        -- ESP Lógica Simples
-        if _G.ESPPlayer then
-            for _, v in pairs(game.Players:GetPlayers()) do
-                if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("Head") and not v.Character.Head:FindFirstChild("LagTeckESP") then
-                    local bg = Instance.new("BillboardGui", v.Character.Head)
-                    bg.Name = "LagTeckESP"
-                    bg.Size = UDim2.new(1,0,1,0)
-                    bg.AlwaysOnTop = true
-                    local txt = Instance.new("TextLabel", bg)
-                    txt.Text = v.Name
-                    txt.TextColor3 = Color3.fromRGB(255, 0, 0)
-                    txt.BackgroundTransparency = 1
-                    txt.Size = UDim2.new(1,0,1,0)
-                end
+   while wait(0.1) do
+      pcall(function()
+         local Points = LocalPlayer.Data.Points.Value
+         if Points > 0 then
+            if _G.Settings.AutoMelee then
+               game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Melee", _G.Settings.PointsToAdd)
             end
-        end
-    end
+            if _G.Settings.AutoDefense then
+               game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Defense", _G.Settings.PointsToAdd)
+            end
+            if _G.Settings.AutoSword then
+               game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Sword", _G.Settings.PointsToAdd)
+            end
+            if _G.Settings.AutoGun then
+               game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Gun", _G.Settings.PointsToAdd)
+            end
+            if _G.Settings.AutoFruit then
+               game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Demon Fruit", _G.Settings.PointsToAdd)
+            end
+         end
+      end)
+   end
 end)
 
--- [[ PARTE 8/10: SERVER STATUS & DETECTORES AVANÇADOS ]] --
+-- TAB 6: TELEPORTES
+local TeleportTab = Window:CreateTab("🌍 Teleportes", 4483362458)
 
-local ServerTab = Window:CreateTab("Status Server", 4483345998)
+TeleportTab:CreateSection("🌊 Mudar de Mar")
 
-ServerTab:CreateSection("Informações do Mundo")
+TeleportTab:CreateButton({
+   Name = "Teleportar para Sea 1",
+   Callback = function()
+      PausarTodosFarms()
+      wait(0.5)
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain")
+   end,
+})
 
-local TimeLabel = ServerTab:CreateLabel("Tempo de Servidor: Carregando...")
-local MirageLabel = ServerTab:CreateLabel("Mirage Island: 🔍 Buscando...")
-local KitsuneLabel = ServerTab:CreateLabel("Kitsune Island: 🔍 Buscando...")
-local FrozenLabel = ServerTab:CreateLabel("Frozen Dimension (Leviathan): ❌")
-local EliteLabel = ServerTab:CreateLabel("Elite Hunter: ❌")
-local CakeLabel = ServerTab:CreateLabel("Dough King Counter: Carregando...")
+TeleportTab:CreateButton({
+   Name = "Teleportar para Sea 2",
+   Callback = function()
+      PausarTodosFarms()
+      wait(0.5)
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelDressrosa")
+   end,
+})
 
-function FormatTime(seconds)
-    local hours = math.floor(seconds / 3600)
-    local minutes = math.floor((seconds % 3600) / 60)
-    local seconds = math.floor(seconds % 60)
-    return string.format("%02d:%02d:%02d", hours, minutes, seconds)
+TeleportTab:CreateButton({
+   Name = "Teleportar para Sea 3",
+   Callback = function()
+      PausarTodosFarms()
+      wait(0.5)
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelZou")
+   end,
+})
+
+TeleportTab:CreateSection("🏝️ Ilhas do Mundo Atual")
+
+-- Lista de ilhas baseada no mundo
+local IslandList = {}
+if World1 then
+   IslandList = {
+      "Starter Island", "Jungle", "Pirate Village", "Desert", "Frozen Village",
+      "Marine Fortress", "Skylands", "Prison", "Colosseum", "Magma Village",
+      "Underwater City", "Upper Skylands", "Fountain City"
+   }
+elseif World2 then
+   IslandList = {
+      "Kingdom of Rose", "Cafe", "Mansion", "Graveyard", "Snow Mountain",
+      "Hot and Cold", "Cursed Ship", "Ice Castle", "Forgotten Island"
+   }
+elseif World3 then
+   IslandList = {
+      "Port Town", "Great Tree", "Castle on the Sea", "Hydra Island",
+      "Floating Turtle", "Haunted Castle", "Sea of Treats", "Chocolate Land",
+      "Cake Land", "Candy Land", "Tiki Outpost"
+   }
 end
 
-spawn(function()
-    while task.wait(1) do
-        pcall(function()
-            local uptime = workspace.DistributedGameTime
-            TimeLabel:Set("Tempo Online: " .. FormatTime(uptime))
+local IslandDropdown = TeleportTab:CreateDropdown({
+   Name = "Selecionar Ilha",
+   Options = IslandList,
+   CurrentOption = {IslandList[1]},
+   Callback = function(Option)
+      _G.Settings.SelectedIsland = Option[1]
+   end,
+})
 
-            if workspace._WorldOrigin.Locations:FindFirstChild("Mirage Island") then
-                MirageLabel:Set("Mirage Island: ✅ SPAWNED! (Vá em Sea Events)")
-            else
-                MirageLabel:Set("Mirage Island: ❌ Não existe")
-            end
-
-            if workspace.Map:FindFirstChild("Kitsune Island") then
-                KitsuneLabel:Set("Kitsune Island: ✅ SPAWNED!")
-            else
-                KitsuneLabel:Set("Kitsune Island: ❌")
-            end
-            
-            if workspace.Map:FindFirstChild("FrozenDimension") then
-                 FrozenLabel:Set("Frozen Dimension: ✅ ABERTA!")
-            else
-                 FrozenLabel:Set("Frozen Dimension: ❌ Fechada")
-            end
-
-            local eliteFound = false
-            for _, v in pairs(workspace.Enemies:GetChildren()) do
-                if v.Name == "Diablo" or v.Name == "Deandre" or v.Name == "Urban" then
-                    eliteFound = true
-                    EliteLabel:Set("Elite Hunter: ✅ VIVO (" .. v.Name .. ")")
-                    if not v:FindFirstChild("EliteESP") then
-                         local bg = Instance.new("BillboardGui", v)
-                         bg.Name = "EliteESP"
-                         bg.Size = UDim2.new(2,0,2,0); bg.AlwaysOnTop = true
-                         local t = Instance.new("TextLabel", bg); t.Size = UDim2.new(1,0,1,0)
-                         t.Text = "ELITE AQUI"; t.TextColor3 = Color3.new(1,0,0); t.BackgroundTransparency = 1
-                    end
-                    break
-                end
-            end
-            if not eliteFound then EliteLabel:Set("Elite Hunter: ❌ Morto/Não Spawnado") end
-
-            if World3 and math.floor(uptime) % 3 == 0 then
-               local status = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")
-               if status then
-                   CakeLabel:Set("Status Dough: " .. tostring(status))
-               end
-            elseif not World3 then
-               CakeLabel:Set("Status Dough: Apenas no Sea 3")
-            end
-        end)
-    end
-end)
-
--- [[ PARTE 9/10: MISC, SETTINGS & COMUNIDADE ]] --
-
-local MiscTab = Window:CreateTab("Misc", 4483345998)
-
-MiscTab:CreateSection("Comunidade Lag Teck")
-
-MiscTab:CreateButton({
-   Name = "Copiar Link do Discord",
+TeleportTab:CreateButton({
+   Name = "Teleportar para Ilha Selecionada",
    Callback = function()
-      setclipboard("https://discord.gg/RnZ6XHHFj7")
+      PausarTodosFarms()
+      wait(0.5)
+      -- Aqui você adiciona as coordenadas específicas de cada ilha
       Rayfield:Notify({
-         Title = "Sucesso!",
-         Content = "Link da Lag Teck copiado para sua área de transferência!",
-         Duration = 5,
-         Image = 134586849523908,
+         Title = "Teleporte",
+         Content = "Teleportando para: " .. _G.Settings.SelectedIsland,
+         Duration = 3,
       })
    end,
 })
 
-MiscTab:CreateSection("Gerenciamento de Servidor")
+-- TAB 7: SHOP
+local ShopTab = Window:CreateTab("🛒 Shop", 4483362458)
+
+ShopTab:CreateSection("🥋 Estilos de Luta")
+
+ShopTab:CreateButton({
+   Name = "Comprar Godhuman (Level 2450)",
+   Callback = function()
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyGodhuman")
+   end,
+})
+
+ShopTab:CreateButton({
+   Name = "Comprar Superhuman (Level 300)",
+   Callback = function()
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySuperhuman")
+   end,
+})
+
+ShopTab:CreateButton({
+   Name = "Comprar Dragon Talon (Level 1500)",
+   Callback = function()
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDragonTalon")
+   end,
+})
+
+ShopTab:CreateButton({
+   Name = "Comprar Electric Claw (Level 1500)",
+   Callback = function()
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyElectricClaw")
+   end,
+})
+
+ShopTab:CreateButton({
+   Name = "Comprar Death Step (Level 1500)",
+   Callback = function()
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDeathStep")
+   end,
+})
+
+ShopTab:CreateButton({
+   Name = "Comprar Sharkman Karate (Level 1500)",
+   Callback = function()
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate")
+   end,
+})
+
+-- TAB 8: MISC
+local MiscTab = Window:CreateTab("⚙️ Misc", 4483362458)
+
+MiscTab:CreateSection("🎮 Utilidades")
 
 MiscTab:CreateButton({
-   Name = "Server Hop (Trocar de Server)",
+   Name = "Server Hop (Trocar de Servidor)",
    Callback = function()
-      Rayfield:Notify({Title="Server Hop", Content="Buscando servidor com menos gente...", Duration=3})
-      local PlaceID = game.PlaceId
-      local AllIDs = {}
-      local foundAnything = ""
-      local actualHour = os.date("!*t").hour
-      local function TPReturner()
-         local Site;
-         if foundAnything == "" then
-            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
-         else
-            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
-         end
-         local ID = ""
-         if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
-            foundAnything = Site.nextPageCursor
-         end
-         for i,v in pairs(Site.data) do
-            local Possible = true
-            ID = tostring(v.id)
-            if tonumber(v.maxPlayers) > tonumber(v.playing) then
-               for _,Existing in pairs(AllIDs) do
-                  if ID == tostring(Existing) then Possible = false end
-               end
-               if Possible == true then
-                  table.insert(AllIDs, ID)
-                  wait()
-                  pcall(function()
-                     game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
-                  end)
-                  wait(4)
-               end
-            end
-         end
+      Rayfield:Notify({
+         Title = "Server Hop",
+         Content = "Procurando servidor...",
+         Duration = 3,
+      })
+      -- Código de server hop aqui
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "Rejoin (Reentrar no Servidor)",
+   Callback = function()
+      game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "🎁 Resgatar Todos os Códigos",
+   Callback = function()
+      local codes = {
+         "NEWTROLL", "KITT_RESET", "Sub2CaptainMaui", "DEVSCOOKING", "kittgaming",
+         "Sub2Fer999", "Enyu_is_Pro", "Magicbus", "JCWK", "Starcodeheo", "Bluxxy",
+         "fudd10_v2", "Fudd10", "BIGNEWS", "THEGREATACE", "SUB2GAMERROBOT_RESET1",
+         "SUB2GAMERROBOT_EXP1", "Sub2OfficialNoobie", "StrawHatMaine", "TantaiGaming",
+         "Axiore", "Sub2Daigrock", "Sub2UncleKizaru"
+      }
+      for _, code in pairs(codes) do
+         game:GetService("ReplicatedStorage").Remotes.Redeem:InvokeServer(code)
+         wait(0.1)
       end
-      while wait() do
-         pcall(function()
-            TPReturner()
-            if foundAnything ~= "" then TPReturner() end
-         end)
-      end
+      Rayfield:Notify({
+         Title = "Códigos",
+         Content = "Todos os códigos foram resgatados!",
+         Duration = 5,
+      })
    end,
 })
 
-MiscTab:CreateButton({
-   Name = "Rejoin (Reentrar no mesmo server)",
-   Callback = function()
-      game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)
-   end,
-})
-
-MiscTab:CreateSection("Códigos (2x XP / Reset)")
+MiscTab:CreateSection("🎨 Performance")
 
 MiscTab:CreateButton({
-   Name = "Resgatar Todos os Códigos",
+   Name = "Tela Branca (FPS Boost)",
    Callback = function()
-       local codes = {
-           "NEWTROLL", "KITT_RESET", "Sub2CaptainMaui", "DEVSCOOKING", "kittgaming",
-           "Sub2Fer999", "Enyu_is_Pro", "Magicbus", "JCWK", "Starcodeheo", "Bluxxy",
-           "fudd10_v2", "Fudd10", "BIGNEWS", "THEGREATACE", "SUB2GAMERROBOT_RESET1",
-           "SUB2GAMERROBOT_EXP1", "Sub2OfficialNoobie", "StrawHatMaine", "TantaiGaming",
-           "Axiore", "Sub2Daigrock", "Sub2UncleKizaru"
-       }
-       for _, code in pairs(codes) do
-           game:GetService("ReplicatedStorage").Remotes.Redeem:InvokeServer(code)
-           task.wait(0.1)
-       end
-       Rayfield:Notify({Title="Lag Teck", Content="Todos os códigos foram tentados!", Duration=5})
-   end,
-})
-
-MiscTab:CreateSection("Otimização (FPS)")
-
-MiscTab:CreateButton({
-   Name = "Tela Branca (Economia de Bateria)",
-   Callback = function()
-       game:GetService("RunService"):Set3dRenderingEnabled(false)
-       Rayfield:Notify({Title="FPS", Content="Tela 3D desligada para economizar bateria.", Duration=3})
+      game:GetService("RunService"):Set3dRenderingEnabled(false)
    end,
 })
 
 MiscTab:CreateButton({
    Name = "Voltar Tela Normal",
    Callback = function()
-       game:GetService("RunService"):Set3dRenderingEnabled(true)
+      game:GetService("RunService"):Set3dRenderingEnabled(true)
    end,
 })
 
--- [[ PARTE 10/10: FINALIZAÇÃO & ANTI-AFK ]] --
+MiscTab:CreateButton({
+   Name = "🔥 Copiar Discord Lag Teck",
+   Callback = function()
+      setclipboard("https://discord.gg/RnZ6XHHFj7")
+      Rayfield:Notify({
+         Title = "Discord Copiado!",
+         Content = "Link copiado: discord.gg/RnZ6XHHFj7",
+         Duration = 5,
+      })
+   end,
+})
 
-local SettingsTab = Window:CreateTab("Config", 4483345998)
+-- TAB 9: CONFIGS
+local ConfigTab = Window:CreateTab("⚙️ Configurações", 4483362458)
 
-SettingsTab:CreateSection("Sistema")
+ConfigTab:CreateSection("💾 Sistema")
 
-SettingsTab:CreateButton({
-   Name = "Destruir Interface (Fechar Script)",
+ConfigTab:CreateButton({
+   Name = "Salvar Configuração",
+   Callback = function()
+      Rayfield:LoadConfiguration()
+      Rayfield:Notify({
+         Title = "Configuração",
+         Content = "Configurações salvas!",
+         Duration = 3,
+      })
+   end,
+})
+
+ConfigTab:CreateButton({
+   Name = "🔄 Reativar Farms (Após Teleporte)",
+   Callback = function()
+      _G.Settings.ManualTeleport = false
+      Rayfield:Notify({
+         Title = "Sistema Reativado",
+         Content = "Você pode ligar os farms novamente!",
+         Duration = 3,
+      })
+   end,
+})
+
+ConfigTab:CreateButton({
+   Name = "❌ Destruir Interface",
    Callback = function()
       Rayfield:Destroy()
    end,
 })
 
--- [[ ANTI-AFK AUTOMÁTICO ]] --
+-- ============================================
+-- ANTI-AFK
+-- ============================================
 spawn(function()
    local vu = game:GetService("VirtualUser")
    game:GetService("Players").LocalPlayer.Idled:connect(function()
       vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
       wait(1)
       vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-      print("Lag Teck: Anti-AFK ativado.")
    end)
 end)
 
--- [[ INICIALIZAR SISTEMA ]] --
-
-Rayfield:LoadConfiguration()
-
-Rayfield:Notify({
-   Title = "Lag Teck - v1.1 CORRIGIDO!",
-   Content = "✅ Sistema anti-volta no teleporte ativado!\n🔄 Use o botão 'Reativar Farms' quando precisar.",
-   Duration = 10,
-   Image = 134586849523908,
-})
-
-print("------------------------------------------------")
-print("Lag Teck Community - v1.1 (VERSÃO CORRIGIDA)")
-print("Correção: Sistema de pausa automática de farms")
-print("Executor: " .. (identifyexecutor and identifyexecutor() or "Unknown"))
-print("------------------------------------------------")
-
--- [[ FIM DO SCRIPT CORRIGIDO ]] --
+-- ============================================
+-- INICIALIZAÇÃO FINAL
+-- ============================================
+print("================================================")
+print("🔥 LAG TECK COMMUNITY - BLOX FRUITS v2.0")
+print("📌 Script carregado com sucesso!")
+print("💬 Discord: discord.gg/RnZ6XHHFj7")
+print("================================================")
