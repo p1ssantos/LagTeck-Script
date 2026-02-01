@@ -1,4 +1,5 @@
--- [[ LAG TECK COMMUNITY | BLOX FRUITS SUPREME v1.0 ]] --
+-- [[ LAG TECK COMMUNITY | BLOX FRUITS SUPREME v1.1 - CORRIGIDO ]] --
+-- CORREÇÃO: Sistema de pausa automática para evitar volta ao teleportar
 -- PARTE 1/6: CORE & SECURITY
 
 if not game:IsLoaded() then game.Loaded:Wait() end
@@ -9,9 +10,9 @@ _G.LagTeckLoaded = true
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Lag Teck | Blox Fruits",
+   Name = "Lag Teck | Blox Fruits v1.1",
    LoadingTitle = "Lag Teck Community",
-   LoadingSubtitle = "by p1ssantos",
+   LoadingSubtitle = "by p1ssantos - VERSÃO CORRIGIDA",
    ConfigurationSaving = { Enabled = true, FolderName = "LagTeckData" },
    Theme = "Ocean",
    CustomImageLoader = true
@@ -35,13 +36,37 @@ _G.SelectWeapon = "Melee"
 _G.AutoStats = false
 _G.SeaEvents = false
 _G.FastAttack = true
-_G.BringMobs = true
+_G.BringMobs = false -- 🔧 CORRIGIDO: Agora começa DESLIGADO
+_G.ManualTeleport = false -- 🆕 NOVA VARIÁVEL: Indica teleporte manual
 
 -- IDENTIFICAÇÃO DE MUNDO
 local World1, World2, World3 = false, false, false
 if game.PlaceId == 2753915549 then World1 = true
 elseif game.PlaceId == 4442272183 then World2 = true
 elseif game.PlaceId == 7449423635 then World3 = true end
+
+-- 🆕 FUNÇÃO PARA PAUSAR TODOS OS FARMS
+function PausarTodosFarms()
+   _G.AutoFarm = false
+   _G.AutoMastery = false
+   _G.BringMobs = false
+   _G.AutoTrial = false
+   _G.KillAuraRaid = false
+   _G.AutoNextIsland = false
+   _G.AutoEctoplasm = false
+   _G.AutoBone = false
+   _G.AutoCocoa = false
+   _G.AutoDoughKing = false
+   _G.SeaEvents = false
+   _G.TerrorShark = false
+   _G.ManualTeleport = true
+   
+   Rayfield:Notify({
+      Title="Sistema de Proteção", 
+      Content="Todos os farms foram pausados para teleporte seguro!",
+      Duration=3
+   })
+end
 
 -- FUNÇÕES DE SUPORTE
 local function Atacar()
@@ -226,6 +251,7 @@ FarmTab:CreateToggle({
    Flag = "AutoFarm",
    Callback = function(Value)
       _G.AutoFarm = Value
+      _G.ManualTeleport = false -- 🔧 CORRIGIDO: Desativa modo manual
    end,
 })
 
@@ -235,6 +261,22 @@ FarmTab:CreateToggle({
    Flag = "AutoMastery",
    Callback = function(Value)
       _G.AutoMastery = Value
+      _G.ManualTeleport = false -- 🔧 CORRIGIDO: Desativa modo manual
+   end,
+})
+
+-- 🆕 BOTÃO PARA REATIVAR FARMS APÓS TELEPORTE
+FarmTab:CreateSection("Controle Manual")
+
+FarmTab:CreateButton({
+   Name = "🔄 Reativar Farms (Após Teleporte)",
+   Callback = function()
+      _G.ManualTeleport = false
+      Rayfield:Notify({
+         Title="Sistema Reativado", 
+         Content="Você pode ligar os farms novamente!",
+         Duration=3
+      })
    end,
 })
 
@@ -271,7 +313,7 @@ StatsTab:CreateToggle({
    Callback = function(Value) _G.AutoStatsFruit = Value end,
 })
 
--- [[ PARTE 4/6: TELEPORTES E SEA EVENTS ]] --
+-- [[ PARTE 4/6: TELEPORTES E SEA EVENTS - CORRIGIDO ]] --
 
 local TeleportTab = Window:CreateTab("Teleports", 4483345998)
 local SeaEventsTab = Window:CreateTab("Sea Events", 4483345998)
@@ -281,20 +323,32 @@ TeleportTab:CreateSection("Mudar de Mar (Seas)")
 
 TeleportTab:CreateButton({
    Name = "Ir para Sea 1 (Old World)",
-   Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain") end,
+   Callback = function() 
+      PausarTodosFarms() -- 🔧 CORRIGIDO: Pausa tudo antes
+      task.wait(0.5)
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain") 
+   end,
 })
 
 TeleportTab:CreateButton({
    Name = "Ir para Sea 2 (Dressrosa)",
-   Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelDressrosa") end,
+   Callback = function() 
+      PausarTodosFarms() -- 🔧 CORRIGIDO: Pausa tudo antes
+      task.wait(0.5)
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelDressrosa") 
+   end,
 })
 
 TeleportTab:CreateButton({
    Name = "Ir para Sea 3 (Zou)",
-   Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelZou") end,
+   Callback = function() 
+      PausarTodosFarms() -- 🔧 CORRIGIDO: Pausa tudo antes
+      task.wait(0.5)
+      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelZou") 
+   end,
 })
 
--- [[ ABA: TELEPORTES DE ILHAS ]] --
+-- [[ ABA: TELEPORTES DE ILHAS - TOTALMENTE CORRIGIDO ]] --
 TeleportTab:CreateSection("Ilhas do Mundo Atual")
 
 -- Lista Inteligente: Só mostra as ilhas do mar que você está
@@ -313,18 +367,74 @@ TeleportTab:CreateDropdown({
    CurrentOption = {""},
    Callback = function(Option)
       local island = Option[1]
+      
+      -- 🔧 CORRIGIDO: PAUSA TUDO ANTES DE TELEPORTAR
+      PausarTodosFarms()
+      task.wait(0.8) -- Aguarda os loops pararem completamente
+      
       local p = game.Players.LocalPlayer.Character.HumanoidRootPart
-      -- Coordenadas resumidas (Sea 1, 2 e 3)
-      if island == "Jungle" then p.CFrame = CFrame.new(-1598, 35, 153)
-      elseif island == "Pirate Village" then p.CFrame = CFrame.new(-1141, 4, 3831)
-      elseif island == "Desert" then p.CFrame = CFrame.new(944, 20, 4373)
-      elseif island == "MarineFord" then p.CFrame = CFrame.new(-4914, 50, 4281)
-      elseif island == "Cafe" then p.CFrame = CFrame.new(-380, 77, 255)
-      elseif island == "Green Zone" then p.CFrame = CFrame.new(-2448, 73, -3210)
-      elseif island == "Mansion" then p.CFrame = CFrame.new(-12471, 374, -7551)
-      elseif island == "Castle on Sea" then p.CFrame = CFrame.new(-5071, 314, -3150)
-      elseif island == "Tiki Outpost" then p.CFrame = CFrame.new(-16210, 15, 300)
+      
+      -- Coordenadas completas (Sea 1, 2 e 3)
+      if island == "Jungle" then 
+         p.CFrame = CFrame.new(-1598, 35, 153)
+      elseif island == "Pirate Village" then 
+         p.CFrame = CFrame.new(-1141, 4, 3831)
+      elseif island == "Desert" then 
+         p.CFrame = CFrame.new(944, 20, 4373)
+      elseif island == "Snow Village" then 
+         p.CFrame = CFrame.new(1389, 88, -1298)
+      elseif island == "MarineFord" then 
+         p.CFrame = CFrame.new(-4914, 50, 4281)
+      elseif island == "Skypiea" then 
+         p.CFrame = CFrame.new(-7894, 5547, -380)
+      elseif island == "Prison" then 
+         p.CFrame = CFrame.new(4876, 5, 734)
+      elseif island == "Fountain City" then 
+         p.CFrame = CFrame.new(5127, 59, 4105)
+      
+      -- Sea 2
+      elseif island == "Cafe" then 
+         p.CFrame = CFrame.new(-380, 77, 255)
+      elseif island == "Green Zone" then 
+         p.CFrame = CFrame.new(-2448, 73, -3210)
+      elseif island == "Graveyard" then 
+         p.CFrame = CFrame.new(-5550, 28, -850)
+      elseif island == "Snow Mountain" then 
+         p.CFrame = CFrame.new(753, 408, -5274)
+      elseif island == "Hot and Cold" then 
+         p.CFrame = CFrame.new(-6127, 15, -5040)
+      elseif island == "Cursed Ship" then 
+         p.CFrame = CFrame.new(923, 125, 32885)
+      elseif island == "Ice Castle" then 
+         p.CFrame = CFrame.new(5400, 50, -6180)
+      elseif island == "Forgotten Island" then 
+         p.CFrame = CFrame.new(-3054, 240, -10145)
+      
+      -- Sea 3
+      elseif island == "Mansion" then 
+         p.CFrame = CFrame.new(-12471, 374, -7551)
+      elseif island == "Castle on Sea" then 
+         p.CFrame = CFrame.new(-5071, 314, -3150)
+      elseif island == "Port Town" then 
+         p.CFrame = CFrame.new(-290, 43, 5343)
+      elseif island == "Hydra Island" then 
+         p.CFrame = CFrame.new(5749, 611, -282)
+      elseif island == "Great Tree" then 
+         p.CFrame = CFrame.new(2681, 1682, -7190)
+      elseif island == "Floating Turtle" then 
+         p.CFrame = CFrame.new(-13348, 332, -7635)
+      elseif island == "Haunted Castle" then 
+         p.CFrame = CFrame.new(-9515, 142, 5567)
+      elseif island == "Tiki Outpost" then 
+         p.CFrame = CFrame.new(-16210, 15, 300)
       end
+      
+      -- 🆕 NOTIFICAÇÃO DE SUCESSO
+      Rayfield:Notify({
+         Title="Teleporte Seguro", 
+         Content="Você foi para: " .. island .. "\n⚠️ Farms pausados! Use o botão Reativar.",
+         Duration=5
+      })
    end,
 })
 
@@ -335,18 +445,27 @@ if World3 then
     SeaEventsTab:CreateToggle({
        Name = "Auto Sea Events (Barcos/Pedras)",
        CurrentValue = false,
-       Callback = function(Value) _G.SeaEvents = Value end,
+       Callback = function(Value) 
+          _G.SeaEvents = Value 
+          _G.ManualTeleport = false
+       end,
     })
 
     SeaEventsTab:CreateToggle({
        Name = "Auto Terror Shark",
        CurrentValue = false,
-       Callback = function(Value) _G.TerrorShark = Value end,
+       Callback = function(Value) 
+          _G.TerrorShark = Value 
+          _G.ManualTeleport = false
+       end,
     })
 
     SeaEventsTab:CreateButton({
        Name = "Teleportar para Kitsune Island (Se existir)",
        Callback = function()
+          PausarTodosFarms() -- 🔧 CORRIGIDO
+          task.wait(0.5)
+          
           local kit = workspace.Map:FindFirstChild("Kitsune Island")
           if kit then
               game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = kit.WorldPivot
@@ -360,6 +479,9 @@ if World3 then
     SeaEventsTab:CreateButton({
        Name = "Encontrar Mirage Island",
        Callback = function()
+          PausarTodosFarms() -- 🔧 CORRIGIDO
+          task.wait(0.5)
+          
           local mirage = workspace._WorldOrigin.Locations:FindFirstChild("Mirage Island")
           if mirage then
               game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = mirage.WorldPivot * CFrame.new(0, 50, 0)
@@ -443,7 +565,6 @@ MaterialTab:CreateToggle({
    Callback = function(Value)
       _G.AutoEctoplasm = Value
       if Value then
-          -- Define configurações para farmar no navio
           _G.SelectWeapon = "Melee" 
       end
    end,
@@ -485,49 +606,51 @@ MaterialTab:CreateButton({
 -- [[ LÓGICA DE EXECUÇÃO DA PARTE 5 ]] --
 spawn(function()
     while task.wait(1) do
-        -- Lógica de Comprar Chip
-        if _G.AutoBuyChip then
-            pcall(function()
-                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectRaid)
-            end)
-        end
-        
-        -- Lógica de Iniciar Raid
-        if _G.AutoStartRaid then
-            pcall(function()
-                 -- Detecta se está no Sea 2 ou 3 para apertar o botão certo
-                 if World2 then
-                     fireclickdetector(workspace.Map.CircleIsland.RaidSummon2.Button.Main.ClickDetector)
-                 elseif World3 then
-                     fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector)
-                 end
-            end)
-        end
-        
-        -- Lógica de Next Island (Raid)
-        if _G.AutoNextIsland then
-            pcall(function()
-                -- Verifica se o mob count é 0 e voa para a próxima ilha da raid
-                local mobs = workspace.Enemies:GetChildren()
-                if #mobs == 0 then
-                    -- Lógica simplificada de voo para frente (depende do mapa da raid)
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-50)
-                end
-            end)
+        -- 🔧 CORRIGIDO: Só executa se NÃO estiver em teleporte manual
+        if not _G.ManualTeleport then
+            -- Lógica de Comprar Chip
+            if _G.AutoBuyChip then
+                pcall(function()
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectRaid)
+                end)
+            end
+            
+            -- Lógica de Iniciar Raid
+            if _G.AutoStartRaid then
+                pcall(function()
+                     if World2 then
+                         fireclickdetector(workspace.Map.CircleIsland.RaidSummon2.Button.Main.ClickDetector)
+                     elseif World3 then
+                         fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector)
+                     end
+                end)
+            end
+            
+            -- Lógica de Next Island (Raid)
+            if _G.AutoNextIsland then
+                pcall(function()
+                    local mobs = workspace.Enemies:GetChildren()
+                    if #mobs == 0 then
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-50)
+                    end
+                end)
+            end
         end
     end
 end)
 
 -- [[ PARTE 6/10: RAÇA V4, MIRAGE & TRIALS ]] --
 
--- Reutilizando a aba 'RaceTab' criada na Parte 4
--- Se você não copiou a Parte 4, o script pode dar erro aqui.
+local RaceTab = Window:CreateTab("Raça V4", 4483345998)
 
 RaceTab:CreateSection("Mirage Island & Gear")
 
 RaceTab:CreateButton({
    Name = "Teleportar para Mirage Island (Se existir)",
    Callback = function()
+      PausarTodosFarms() -- 🔧 CORRIGIDO
+      task.wait(0.5)
+      
       local mirage = workspace._WorldOrigin.Locations:FindFirstChild("Mirage Island")
       if mirage then
          game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = mirage.WorldPivot * CFrame.new(0, 50, 0)
@@ -541,10 +664,12 @@ RaceTab:CreateButton({
 RaceTab:CreateButton({
    Name = "Pegar Engrenagem Azul (Blue Gear)",
    Callback = function()
+      PausarTodosFarms() -- 🔧 CORRIGIDO
+      task.wait(0.5)
+      
       local encontrou = false
       if workspace.Map:FindFirstChild("MysticIsland") then
          for _, v in pairs(workspace.Map.MysticIsland:GetChildren()) do
-            -- ID da Mesh da Engrenagem Azul
             if v:IsA("MeshPart") and v.MeshId == "rbxassetid://10153114969" then
                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame
                encontrou = true
@@ -564,6 +689,8 @@ RaceTab:CreateSection("Templo do Tempo (Trials)")
 RaceTab:CreateButton({
    Name = "Teleportar Entrada Templo",
    Callback = function()
+      PausarTodosFarms() -- 🔧 CORRIGIDO
+      task.wait(0.5)
       game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(28282, 14896, 105)
    end,
 })
@@ -571,9 +698,7 @@ RaceTab:CreateButton({
 RaceTab:CreateButton({
    Name = "Puxar Alavanca (Porta)",
    Callback = function()
-      -- Tenta puxar via Remote
       game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CheckTempleDoor")
-      -- Teleporta para a alavanca física
       game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(28576, 14936, 76)
    end,
 })
@@ -596,18 +721,15 @@ RaceTab:CreateButton({
 -- [[ LÓGICA DE EXECUÇÃO DA PARTE 6 ]] --
 spawn(function()
     while task.wait(0.5) do
-        if _G.AutoTrial then
+        if _G.AutoTrial and not _G.ManualTeleport then -- 🔧 CORRIGIDO
             pcall(function()
-                -- Tenta iniciar a trial
                 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaceV4Progress", "Begin")
                 
-                -- Teleporta de volta se cair
                 local player = game.Players.LocalPlayer
                 if (player.Character.HumanoidRootPart.Position - Vector3.new(28282, 14896, 105)).Magnitude > 3000 then
                      game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaceV4Progress", "TeleportBack")
                 end
                 
-                -- Kill Aura específico para Trials
                 for _, v in pairs(workspace.Enemies:GetChildren()) do
                     if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
                         v.Humanoid.Health = 0
@@ -622,7 +744,6 @@ end)
 -- [[ PARTE 7/10: LOJA, STATUS & ESP VISUAL ]] --
 
 local ShopTab = Window:CreateTab("Shop", 4483345998)
-local StatsTab = Window:CreateTab("Stats", 4483345998)
 local ESPTab = Window:CreateTab("ESP", 4483345998)
 
 -- [[ ABA: LOJA (SHOP) ]] --
@@ -675,33 +796,6 @@ ShopTab:CreateButton({
    Callback = function() game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDeathStep") end,
 })
 
--- [[ ABA: AUTO STATS (PONTOS) ]] --
-StatsTab:CreateSection("Distribuição Automática")
-
-StatsTab:CreateToggle({
-   Name = "Upar Melee (Soco)",
-   CurrentValue = false,
-   Callback = function(Value) _G.StatsMelee = Value end,
-})
-
-StatsTab:CreateToggle({
-   Name = "Upar Defense (Vida)",
-   CurrentValue = false,
-   Callback = function(Value) _G.StatsDefense = Value end,
-})
-
-StatsTab:CreateToggle({
-   Name = "Upar Sword (Espada)",
-   CurrentValue = false,
-   Callback = function(Value) _G.StatsSword = Value end,
-})
-
-StatsTab:CreateToggle({
-   Name = "Upar Blox Fruit (Fruta)",
-   CurrentValue = false,
-   Callback = function(Value) _G.StatsFruit = Value end,
-})
-
 -- [[ ABA: ESP (VISUAL) ]] --
 ESPTab:CreateSection("Wallhack")
 
@@ -743,7 +837,6 @@ spawn(function()
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", v.Name, v)
                     end
                 end
-                -- Verifica frutas no personagem também
                 for _,v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
                     if v:IsA("Tool") and v.ToolTip == "Blox Fruit" then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", v.Name, v)
@@ -752,7 +845,7 @@ spawn(function()
             end)
         end
         
-        -- ESP Lógica Simples (BillboardGui para Delta)
+        -- ESP Lógica Simples
         if _G.ESPPlayer then
             for _, v in pairs(game.Players:GetPlayers()) do
                 if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("Head") and not v.Character.Head:FindFirstChild("LagTeckESP") then
@@ -777,7 +870,6 @@ local ServerTab = Window:CreateTab("Status Server", 4483345998)
 
 ServerTab:CreateSection("Informações do Mundo")
 
--- Labels Dinâmicas (Elas mudam o texto sozinhas)
 local TimeLabel = ServerTab:CreateLabel("Tempo de Servidor: Carregando...")
 local MirageLabel = ServerTab:CreateLabel("Mirage Island: 🔍 Buscando...")
 local KitsuneLabel = ServerTab:CreateLabel("Kitsune Island: 🔍 Buscando...")
@@ -785,7 +877,6 @@ local FrozenLabel = ServerTab:CreateLabel("Frozen Dimension (Leviathan): ❌")
 local EliteLabel = ServerTab:CreateLabel("Elite Hunter: ❌")
 local CakeLabel = ServerTab:CreateLabel("Dough King Counter: Carregando...")
 
--- Função para transformar segundos em Hora:Minuto:Segundo
 function FormatTime(seconds)
     local hours = math.floor(seconds / 3600)
     local minutes = math.floor((seconds % 3600) / 60)
@@ -793,42 +884,35 @@ function FormatTime(seconds)
     return string.format("%02d:%02d:%02d", hours, minutes, seconds)
 end
 
--- [[ LÓGICA DE ATUALIZAÇÃO DO STATUS ]] --
 spawn(function()
     while task.wait(1) do
         pcall(function()
-            -- 1. Tempo do Servidor (Uptime)
             local uptime = workspace.DistributedGameTime
             TimeLabel:Set("Tempo Online: " .. FormatTime(uptime))
 
-            -- 2. Detector de Mirage Island
             if workspace._WorldOrigin.Locations:FindFirstChild("Mirage Island") then
                 MirageLabel:Set("Mirage Island: ✅ SPAWNED! (Vá em Sea Events)")
             else
                 MirageLabel:Set("Mirage Island: ❌ Não existe")
             end
 
-            -- 3. Detector de Kitsune Island (Lua Azul)
             if workspace.Map:FindFirstChild("Kitsune Island") then
                 KitsuneLabel:Set("Kitsune Island: ✅ SPAWNED!")
             else
                 KitsuneLabel:Set("Kitsune Island: ❌")
             end
             
-            -- 4. Detector de Leviathan Gate (Frozen Dimension)
             if workspace.Map:FindFirstChild("FrozenDimension") then
                  FrozenLabel:Set("Frozen Dimension: ✅ ABERTA!")
             else
                  FrozenLabel:Set("Frozen Dimension: ❌ Fechada")
             end
 
-            -- 5. Elite Hunter (Sea 3)
             local eliteFound = false
             for _, v in pairs(workspace.Enemies:GetChildren()) do
                 if v.Name == "Diablo" or v.Name == "Deandre" or v.Name == "Urban" then
                     eliteFound = true
                     EliteLabel:Set("Elite Hunter: ✅ VIVO (" .. v.Name .. ")")
-                    -- Cria um ESP no Elite automaticamente se encontrar
                     if not v:FindFirstChild("EliteESP") then
                          local bg = Instance.new("BillboardGui", v)
                          bg.Name = "EliteESP"
@@ -841,11 +925,8 @@ spawn(function()
             end
             if not eliteFound then EliteLabel:Set("Elite Hunter: ❌ Morto/Não Spawnado") end
 
-            -- 6. Contagem do Dough King (Cake Prince)
-            -- Atualiza a cada 3 segundos para não lagar o jogo com muito Remote
             if World3 and math.floor(uptime) % 3 == 0 then
                local status = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")
-               -- O jogo retorna uma frase longa, vamos limpar para mostrar só o número
                if status then
                    CakeLabel:Set("Status Dough: " .. tostring(status))
                end
@@ -860,7 +941,6 @@ end)
 
 local MiscTab = Window:CreateTab("Misc", 4483345998)
 
--- [[ SEÇÃO COMUNIDADE ]] --
 MiscTab:CreateSection("Comunidade Lag Teck")
 
 MiscTab:CreateButton({
@@ -876,14 +956,12 @@ MiscTab:CreateButton({
    end,
 })
 
--- [[ SEÇÃO SERVIDOR ]] --
 MiscTab:CreateSection("Gerenciamento de Servidor")
 
 MiscTab:CreateButton({
    Name = "Server Hop (Trocar de Server)",
    Callback = function()
       Rayfield:Notify({Title="Server Hop", Content="Buscando servidor com menos gente...", Duration=3})
-      -- Lógica compacta de Hop para Delta iOS
       local PlaceID = game.PlaceId
       local AllIDs = {}
       local foundAnything = ""
@@ -917,7 +995,6 @@ MiscTab:CreateButton({
             end
          end
       end
-      -- Executa o Hop
       while wait() do
          pcall(function()
             TPReturner()
@@ -934,7 +1011,6 @@ MiscTab:CreateButton({
    end,
 })
 
--- [[ SEÇÃO CÓDIGOS ]] --
 MiscTab:CreateSection("Códigos (2x XP / Reset)")
 
 MiscTab:CreateButton({
@@ -955,8 +1031,7 @@ MiscTab:CreateButton({
    end,
 })
 
--- [[ SEÇÃO OTIMIZAÇÃO ]] --
-MiscTab:CreateSection("Performance (FPS)")
+MiscTab:CreateSection("Otimização (FPS)")
 
 MiscTab:CreateButton({
    Name = "Tela Branca (Economia de Bateria)",
@@ -979,7 +1054,6 @@ local SettingsTab = Window:CreateTab("Config", 4483345998)
 
 SettingsTab:CreateSection("Sistema")
 
--- Botão de Pânico (Fechar o Script)
 SettingsTab:CreateButton({
    Name = "Destruir Interface (Fechar Script)",
    Callback = function()
@@ -988,7 +1062,6 @@ SettingsTab:CreateButton({
 })
 
 -- [[ ANTI-AFK AUTOMÁTICO ]] --
--- Isso impede que o Roblox te desconecte após 20 minutos parado
 spawn(function()
    local vu = game:GetService("VirtualUser")
    game:GetService("Players").LocalPlayer.Idled:connect(function()
@@ -1001,21 +1074,19 @@ end)
 
 -- [[ INICIALIZAR SISTEMA ]] --
 
--- Carrega as configurações salvas (Se você ativou algo antes, ele lembra)
 Rayfield:LoadConfiguration()
 
--- Notificação Final de Sucesso
 Rayfield:Notify({
-   Title = "Lag Teck - Sucesso!",
-   Content = "Script 100% Carregado.\nBom jogo, p1ssantos!",
-   Duration = 8,
+   Title = "Lag Teck - v1.1 CORRIGIDO!",
+   Content = "✅ Sistema anti-volta no teleporte ativado!\n🔄 Use o botão 'Reativar Farms' quando precisar.",
+   Duration = 10,
    Image = 134586849523908,
 })
 
--- Log no Console (F9)
 print("------------------------------------------------")
-print("Lag Teck Community - Script Loaded Successfully")
+print("Lag Teck Community - v1.1 (VERSÃO CORRIGIDA)")
+print("Correção: Sistema de pausa automática de farms")
 print("Executor: " .. (identifyexecutor and identifyexecutor() or "Unknown"))
 print("------------------------------------------------")
 
--- [[ FIM DO SCRIPT ]] --
+-- [[ FIM DO SCRIPT CORRIGIDO ]] --
