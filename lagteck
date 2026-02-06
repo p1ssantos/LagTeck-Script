@@ -1122,11 +1122,10 @@ local Title = Instance.new("TextLabel", Top)
 Title.Size = UDim2.new(1, -150, 1, 0)
 Title.Position = UDim2.fromOffset(10, 0)
 Title.Text = "LagTeck | discord.gg/RnZ6XHHFj7"
-Title.TextSize = 11
 Title.TextColor3 = Config.Tema.Texto
 Title.BackgroundTransparency = 1
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 14
+Title.TextSize = 11
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.TextWrapped = true
 
