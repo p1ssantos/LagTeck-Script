@@ -1,7 +1,7 @@
 repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
 --[[===================================================
-    LagTeck Hub - v2.0 ULTRA COMPLETO
-    Sistema completo corrigido
+    LagTeck Hub - v2.0 ULTRA COMPLETO [CORRIGIDO]
+    Sistema completo com todas as correções
     Blox Fruits | Delta iOS Optimized
 =====================================================]]--
 
@@ -24,6 +24,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
 local Lighting = game:GetService("Lighting")
 local LocalPlayer = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
 
 -- =========================
 -- VARIÁVEIS GLOBAIS
@@ -64,7 +65,15 @@ _G.Settings = {
     -- SEA EVENT
     AutoKatakuri = false,
     AutoFactory = false,
-    AutoSeaBeast = false
+    AutoSeaBeast = false,
+    SeaEventBoat = "Nenhum",
+    SeaDepth = "Mar 1",
+    SeaEventActive = false,
+    
+    -- PVP
+    AutoPVP = false,
+    SelectedPlayer = nil,
+    SafeMode = false
 }
 
 -- =========================
@@ -443,6 +452,100 @@ local function ActivateBuso()
 end
 
 -- =========================
+-- FUNÇÃO PARA OBTER BOSSES SPAWNADOS
+-- =========================
+local function GetSpawnedBosses()
+    local spawnedBosses = {"All"}
+    
+    pcall(function()
+        for _, boss in pairs(workspace.Enemies:GetChildren()) do
+            if boss:FindFirstChild("Humanoid") and boss:FindFirstChild("HumanoidRootPart") and boss.Humanoid.Health > 0 then
+                local isBoss = false
+                for _, bossName in pairs(BossList) do
+                    if boss.Name == bossName then
+                        isBoss = true
+                        break
+                    end
+                end
+                
+                if isBoss and not table.find(spawnedBosses, boss.Name) then
+                    table.insert(spawnedBosses, boss.Name)
+                end
+            end
+        end
+    end)
+    
+    return spawnedBosses
+end
+
+-- =========================
+-- FUNÇÃO KATAKURI PROGRESS (SEA 2)
+-- =========================
+local function GetKatakuriProgress()
+    if Sea ~= 2 then
+        return "N/A - Apenas Sea 2"
+    end
+    
+    local progress = 0
+    local total = 500
+    
+    pcall(function()
+        local remote = GetRemote()
+        if remote then
+            local data = remote:InvokeServer("CakePrinceSpawner")
+            if data and type(data) == "number" then
+                progress = data
+            end
+        end
+    end)
+    
+    local remaining = total - progress
+    return string.format("%d/%d (%d restantes)", progress, total, remaining)
+end
+
+-- =========================
+-- TELEPORT ENTRE SEAS
+-- =========================
+local function TeleportToSea(seaNumber)
+    local placeIds = {
+        [1] = 2753915549,
+        [2] = 4442272183,
+        [3] = 7449423635
+    }
+    
+    if not placeIds[seaNumber] then
+        warn("❌ Sea inválido!")
+        return
+    end
+    
+    if Sea == seaNumber then
+        print("✅ Você já está no SEA " .. seaNumber)
+        return
+    end
+    
+    print("🚀 Teleportando para SEA " .. seaNumber .. "...")
+    
+    local success = pcall(function()
+        local remote = GetRemote()
+        if remote then
+            -- Método do jogo para teleportar entre seas
+            remote:InvokeServer("TravelDressrosa")
+            wait(0.5)
+            remote:InvokeServer("TravelZou")
+            wait(0.5)
+            game:GetService("TeleportService"):Teleport(placeIds[seaNumber], LocalPlayer)
+        end
+    end)
+    
+    if not success then
+        -- Fallback: teleport direto
+        pcall(function()
+            game:GetService("TeleportService"):Teleport(placeIds[seaNumber], LocalPlayer)
+        end)
+    end
+end
+
+-- =========================
 -- WALK ON WATER
 -- =========================
 task.spawn(function()
@@ -718,14 +821,18 @@ task.spawn(function()
                     return 
                 end
                 
-                local questGui = LocalPlayer.PlayerGui.Main.Quest
+                local questGui = LocalPlayer.PlayerGui:FindFirstChild("Main")
+                if not questGui then return end
+                
+                questGui = questGui:FindFirstChild("Quest")
+                if not questGui then return end
                 
                 -- Pegar quest se não estiver ativa
-                if not questGui.Visible then
+                if not questGui.Visible or questGui.Container.QuestTitle.Title.Text ~= questInfo.Quest then
                     repeat
                         TP(questInfo.Pos)
                         task.wait(0.5)
-                    until (LocalPlayer.Character.HumanoidRootPart.Position - questInfo.Pos.Position).Magnitude < 10 or not _G.Settings.AutoFarmLevel
+                    until (LocalPlayer.Character.HumanoidRootPart.Position - questInfo.Pos.Position).Magnitude < 15 or not _G.Settings.AutoFarmLevel
                     
                     if _G.Settings.AutoFarmLevel then
                         local remote = GetRemote()
@@ -737,7 +844,7 @@ task.spawn(function()
                 end
                 
                 -- Farmar mob
-                if _G.Settings.AutoFarmLevel then
+                if _G.Settings.AutoFarmLevel and questGui.Visible then
                     for _, mob in pairs(workspace.Enemies:GetChildren()) do
                         if mob.Name == questInfo.Mob and mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
                             
@@ -753,6 +860,7 @@ task.spawn(function()
                                 
                                 if not _G.Settings.AutoFarmLevel then break end
                                 if not mob or not mob.Parent or mob.Humanoid.Health <= 0 then break end
+                                if not questGui.Visible then break end
                                 
                                 -- Bring mob
                                 if _G.Settings.BringMobs then
@@ -824,10 +932,10 @@ task.spawn(function()
 end)
 
 -- =========================
--- AUTO CHEST LOOP
+-- AUTO CHEST LOOP (CORRIGIDO)
 -- =========================
 task.spawn(function()
-    while task.wait(1) do
+    while task.wait(0.5) do
         if _G.Settings.AutoChest then
             pcall(function()
                 for _, chest in pairs(workspace:GetChildren()) do
@@ -835,8 +943,17 @@ task.spawn(function()
                         local chestPart = chest:FindFirstChild("Part") or chest:FindFirstChild("MeshPart")
                         
                         if (LocalPlayer.Character.HumanoidRootPart.Position - chestPart.Position).Magnitude < 5000 then
-                            TP(chestPart.CFrame)
-                            task.wait(0.5)
+                            TP(chestPart.CFrame * CFrame.new(0, 3, 0))
+                            task.wait(0.2)
+                            
+                            -- Tentar abrir o chest
+                            if (LocalPlayer.Character.HumanoidRootPart.Position - chestPart.Position).Magnitude < 5 then
+                                local remote = GetRemote()
+                                if remote then
+                                    remote:InvokeServer("OpenChest", chest.Name)
+                                end
+                                task.wait(1)
+                            end
                         end
                     end
                 end
@@ -917,53 +1034,87 @@ task.spawn(function()
 end)
 
 -- =========================
--- TELEPORT PARA OUTRO SEA
+-- SEA EVENT SYSTEM
 -- =========================
-local function TeleportToSea(seaNumber)
-    local placeIds = {
-        [1] = 2753915549,
-        [2] = 4442272183,
-        [3] = 7449423635
-    }
-    
-    if not placeIds[seaNumber] then
-        warn("❌ Sea inválido!")
-        return
+local SeaDepthPositions = {
+    ["Mar 1"] = -50,
+    ["Mar 2"] = -100,
+    ["Mar 3"] = -200,
+    ["Mar 4"] = -400,
+    ["Mar 5"] = -600,
+    ["Mar 6"] = -800
+}
+
+local circleRadius = 300
+local circleAngle = 0
+
+task.spawn(function()
+    while task.wait(1) do
+        if _G.Settings.SeaEventActive and _G.Settings.SeaEventBoat ~= "Nenhum" then
+            pcall(function()
+                local boat = workspace.Boats:FindFirstChild(_G.Settings.SeaEventBoat)
+                
+                if boat and boat:FindFirstChild("VehicleSeat") then
+                    local depth = SeaDepthPositions[_G.Settings.SeaDepth] or -50
+                    
+                    -- Circular motion
+                    circleAngle = circleAngle + 0.05
+                    if circleAngle >= math.pi * 2 then
+                        circleAngle = 0
+                    end
+                    
+                    local xOffset = math.cos(circleAngle) * circleRadius
+                    local zOffset = math.sin(circleAngle) * circleRadius
+                    
+                    local currentPos = boat.VehicleSeat.CFrame.Position
+                    local newCFrame = CFrame.new(currentPos.X + xOffset, depth, currentPos.Z + zOffset)
+                    
+                    boat.VehicleSeat.CFrame = newCFrame
+                end
+            end)
+        end
     end
-    
-    if Sea == seaNumber then
-        print("✅ Você já está no SEA " .. seaNumber)
-        return
+end)
+
+-- =========================
+-- AUTO PVP
+-- =========================
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.Settings.AutoPVP and _G.Settings.SelectedPlayer then
+            pcall(function()
+                local targetPlayer = Players:FindFirstChild(_G.Settings.SelectedPlayer)
+                
+                if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and targetPlayer.Character:FindFirstChild("Humanoid") and targetPlayer.Character.Humanoid.Health > 0 then
+                    
+                    EquipWeapon()
+                    
+                    repeat
+                        task.wait()
+                        
+                        if not _G.Settings.AutoPVP then break end
+                        if not targetPlayer.Character or targetPlayer.Character.Humanoid.Health <= 0 then break end
+                        
+                        -- Safe mode check
+                        if _G.Settings.SafeMode and LocalPlayer.Character.Humanoid.Health < LocalPlayer.Character.Humanoid.MaxHealth * 0.3 then
+                            print("⚠️ Safe Mode ativado - vida baixa!")
+                            break
+                        end
+                        
+                        LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 5)
+                        
+                        _G.Settings.FastAttack = true
+                        
+                    until not targetPlayer.Character or targetPlayer.Character.Humanoid.Health <= 0 or not _G.Settings.AutoPVP
+                    
+                    _G.Settings.FastAttack = false
+                end
+            end)
+        else
+            _G.Settings.FastAttack = false
+        end
     end
-    
-    print("🚀 Iniciando teleport para SEA " .. seaNumber .. "...")
-    
-    -- Método 1: Teleport direto
-    local success1 = pcall(function()
-        game:GetService("TeleportService"):Teleport(placeIds[seaNumber], LocalPlayer)
-    end)
-    
-    if success1 then
-        print("✅ Teleport iniciado!")
-        return
-    end
-    
-    -- Método 2: Teleport com reserva de servidor
-    local success2 = pcall(function()
-        game:GetService("TeleportService"):TeleportToPlaceInstance(
-            placeIds[seaNumber],
-            game.JobId,
-            LocalPlayer
-        )
-    end)
-    
-    if success2 then
-        print("✅ Teleport iniciado (método 2)!")
-        return
-    end
-    
-    warn("❌ Falha ao teleportar. Tente novamente!")
-end
+end)
 
 -- =========================
 -- GUI (MOBILE OPTIMIZED)
@@ -1316,6 +1467,8 @@ local function Dropdown(parent, texto, options, callback)
             end
         end)
     end
+    
+    return {Dropdown = DropScroll, Button = Btn}
 end
 
 local function Button(parent, texto, callback)
@@ -1378,14 +1531,16 @@ local function GetServerUptime()
     local uptime = workspace:GetServerTimeNow()
     local hours = math.floor(uptime / 3600)
     local minutes = math.floor((uptime % 3600) / 60)
-    return string.format("%dh %dm", hours, minutes)
+    local seconds = math.floor(uptime % 60)
+    return string.format("%02d:%02d:%02d", hours, minutes, seconds)
 end
 
 local function GetSessionTime()
     local sessionTime = os.time() - (_G.JoinTime or os.time())
     local hours = math.floor(sessionTime / 3600)
     local minutes = math.floor((sessionTime % 3600) / 60)
-    return string.format("%dh %dm", hours, minutes)
+    local seconds = math.floor(sessionTime % 60)
+    return string.format("%02d:%02d:%02d", hours, minutes, seconds)
 end
 
 local function InfoBox(parent, title, value, color)
@@ -1461,6 +1616,7 @@ local TeleportTab = CriarAba("🧭 TP")
 local SeaEventTab = CriarAba("🦈 Sea Event")
 local ESPTab = CriarAba("👁️ ESP")
 local PlayerTab = CriarAba("🛡️ Config")
+local PVPTab = CriarAba("⚔️ PVP")
 
 -- Definir aba Principal como primeira
 for _, v in pairs(Tabs) do
@@ -1476,9 +1632,34 @@ Tween(Tabs["🏠 Principal"].Btn, 0.2, {BackgroundColor3 = Config.Tema.Ativo})
 Section(PrincipalTab, "Comunidade Discord")
 
 Button(PrincipalTab, "🎮 Entrar no Discord", function()
-    setclipboard("https://discord.gg/RnZ6XHHFj7")
-    print("✅ Link copiado: https://discord.gg/RnZ6XHHFj7")
+    local url = "https://discord.gg/RnZ6XHHFj7"
+    
+    -- Método 1: Copiar para clipboard
+    pcall(function()
+        setclipboard(url)
+        print("✅ Link do Discord copiado!")
+    end)
+    
+    -- Método 2: Mostrar no console
+    print("🔗 Link do Discord: " .. url)
     print("📋 Cole no seu navegador!")
+    
+    -- Método 3: Abrir no navegador (para executores que suportam)
+    pcall(function()
+        request({
+            Url = "http://127.0.0.1:6463/rpc?v=1",
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["Origin"] = "https://discord.com"
+            },
+            Body = HttpService:JSONEncode({
+                cmd = "INVITE_BROWSER",
+                args = {code = "RnZ6XHHFj7"},
+                nonce = HttpService:GenerateGUID(false)
+            })
+        })
+    end)
 end)
 
 local DiscordInfo = Instance.new("Frame", PrincipalTab)
@@ -1502,11 +1683,11 @@ DiscordText.TextYAlignment = Enum.TextYAlignment.Top
 
 Section(PrincipalTab, "Informações de Tempo")
 
-local UptimeBox = InfoBox(PrincipalTab, "⏱️ Tempo do Servidor", GetServerUptime(), Config.Tema.AzulClaro)
-local SessionBox = InfoBox(PrincipalTab, "🕐 Sua Sessão", GetSessionTime(), Color3.fromRGB(0, 255, 0))
+local UptimeBox = InfoBox(PrincipalTab, "⏱️ Tempo do Servidor (00:00:00)", GetServerUptime(), Config.Tema.AzulClaro)
+local SessionBox = InfoBox(PrincipalTab, "🕐 Sua Sessão (HH:MM:SS)", GetSessionTime(), Color3.fromRGB(0, 255, 0))
 
 task.spawn(function()
-    while task.wait(60) do
+    while task.wait(1) do
         pcall(function()
             UptimeBox.ValueLabel.Text = GetServerUptime()
             SessionBox.ValueLabel.Text = GetSessionTime()
@@ -1516,6 +1697,7 @@ end)
 
 Section(PrincipalTab, "Perfil do Jogador")
 
+local PlayerNameBox = InfoBox(PrincipalTab, "👤 Nome do Jogador", LocalPlayer.Name, Color3.fromRGB(100, 200, 255))
 local MoneyBox = InfoBox(PrincipalTab, "💰 Dinheiro", "Carregando...", Color3.fromRGB(255, 215, 0))
 local FragBox = InfoBox(PrincipalTab, "💎 Fragmentos", "Carregando...", Color3.fromRGB(100, 200, 255))
 
@@ -1531,29 +1713,45 @@ task.spawn(function()
     end
 end)
 
-Section(PrincipalTab, "Status de Eventos (SEA 2 e 3)")
+-- Status de Eventos apenas para Sea 3
+if Sea == 3 then
+    Section(PrincipalTab, "Status de Eventos (SEA 3)")
 
-local StatusGrid = Instance.new("Frame", PrincipalTab)
-StatusGrid.Size = UDim2.new(1, 0, 0, 200)
-StatusGrid.BackgroundTransparency = 1
+    local StatusGrid = Instance.new("Frame", PrincipalTab)
+    StatusGrid.Size = UDim2.new(1, 0, 0, 100)
+    StatusGrid.BackgroundTransparency = 1
 
-local GridLayout = Instance.new("UIGridLayout", StatusGrid)
-GridLayout.CellSize = UDim2.new(0.48, 0, 0, 45)
-GridLayout.CellPadding = UDim2.new(0.04, 0, 0, 8)
+    local GridLayout = Instance.new("UIGridLayout", StatusGrid)
+    GridLayout.CellSize = UDim2.new(0.48, 0, 0, 45)
+    GridLayout.CellPadding = UDim2.new(0.04, 0, 0, 8)
 
-local LeviathanStatus = StatusIndicator(StatusGrid, "🐉 Leviathan Spawned", false)
-local MirageStatus = StatusIndicator(StatusGrid, "🏝️ Ilha Miragem", false)
-local VolcanoStatus = StatusIndicator(StatusGrid, "🌋 Ilha Vulcão", false)
-local KatakuriStatus = StatusIndicator(StatusGrid, "🍩 Katakuri Progress", false)
+    local LeviathanStatus = StatusIndicator(StatusGrid, "🐉 Leviathan", false)
+    local MirageStatus = StatusIndicator(StatusGrid, "🏝️ Ilha Miragem", false)
 
-task.spawn(function()
-    while task.wait(30) do
-        pcall(function()
-            local leviathanSpawned = workspace:FindFirstChild("Leviathan") ~= nil
-            LeviathanStatus.Indicator.BackgroundColor3 = leviathanSpawned and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-        end)
-    end
-end)
+    task.spawn(function()
+        while task.wait(30) do
+            pcall(function()
+                local leviathanSpawned = workspace:FindFirstChild("Leviathan") ~= nil
+                LeviathanStatus.Indicator.BackgroundColor3 = leviathanSpawned and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+            end)
+        end
+    end)
+end
+
+-- Progresso Katakuri apenas para Sea 2
+if Sea == 2 then
+    Section(PrincipalTab, "Progresso Katakuri (SEA 2)")
+    
+    local KatakuriBox = InfoBox(PrincipalTab, "🍩 Katakuri Progress", "Carregando...", Color3.fromRGB(255, 100, 200))
+    
+    task.spawn(function()
+        while task.wait(5) do
+            pcall(function()
+                KatakuriBox.ValueLabel.Text = GetKatakuriProgress()
+            end)
+        end
+    end)
+end
 
 -- =========================
 -- ABA FARM
@@ -1586,8 +1784,45 @@ Toggle(FarmTab, "Auto Farm Boss", function(v)
     _G.Settings.AutoFarmBoss = v
 end)
 
-Dropdown(FarmTab, "Boss", BossList, function(v)
+-- Boss Dropdown com atualização dinâmica
+local bossDropdown = Dropdown(FarmTab, "Boss", GetSpawnedBosses(), function(v)
     _G.Settings.SelectedBoss = v
+end)
+
+-- Atualizar lista de bosses a cada 10 segundos
+task.spawn(function()
+    while task.wait(10) do
+        pcall(function()
+            local spawnedBosses = GetSpawnedBosses()
+            
+            -- Limpar dropdown atual
+            for _, child in pairs(bossDropdown.Dropdown:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child:Destroy()
+                end
+            end
+            
+            -- Recriar opções
+            for _, boss in pairs(spawnedBosses) do
+                local OptBtn = Instance.new("TextButton", bossDropdown.Dropdown)
+                OptBtn.Size = UDim2.new(1, 0, 0, 36)
+                OptBtn.Text = boss
+                OptBtn.BackgroundColor3 = Config.Tema.Botao
+                OptBtn.TextColor3 = Config.Tema.Texto
+                OptBtn.Font = Enum.Font.Gotham
+                OptBtn.TextSize = 9
+                OptBtn.BorderSizePixel = 0
+                
+                OptBtn.MouseButton1Click:Connect(function()
+                    bossDropdown.Button.Text = boss
+                    bossDropdown.Dropdown.Visible = false
+                    _G.Settings.SelectedBoss = boss
+                end)
+            end
+            
+            bossDropdown.Dropdown.CanvasSize = UDim2.fromOffset(0, #spawnedBosses * 38)
+        end)
+    end
 end)
 
 Toggle(FarmTab, "Auto Chest", function(v)
@@ -1628,19 +1863,30 @@ end)
 Button(FruitTab, "📊 Loja Normal", function()
     task.spawn(function()
         local remote = GetRemote()
-        if not remote then return end
+        if not remote then 
+            warn("❌ Remote não encontrado!")
+            return 
+        end
         
-        local success, fruits = pcall(function()
+        print("=== LOJA NORMAL ===")
+        print("Consultando frutas disponíveis...")
+        
+        local success, result = pcall(function()
             return remote:InvokeServer("GetFruits")
         end)
         
-        if success and fruits then
-            print("=== LOJA NORMAL ===")
-            for _, v in pairs(fruits) do
-                if type(v) == "table" then
-                    print(v.Name or "?", "-", v.Price or 0, "💎")
+        if success and result then
+            if type(result) == "table" then
+                for _, fruit in pairs(result) do
+                    if type(fruit) == "table" and fruit.Name and fruit.Price then
+                        print(string.format("🍎 %s - 💵 $%s", fruit.Name, FormatNumber(fruit.Price)))
+                    end
                 end
+            else
+                print("⚠️ Formato de resposta inesperado")
             end
+        else
+            warn("❌ Erro ao consultar loja:", tostring(result))
         end
     end)
 end)
@@ -1648,14 +1894,30 @@ end)
 Button(FruitTab, "🌀 Loja Miragem", function()
     task.spawn(function()
         local remote = GetRemote()
-        if not remote then return end
+        if not remote then 
+            warn("❌ Remote não encontrado!")
+            return 
+        end
         
-        local success = pcall(function()
-            return remote:InvokeServer("GetFruits", LocalPlayer.Character.PrimaryPart.CFrame, true)
+        print("=== LOJA MIRAGEM ===")
+        print("Consultando loja miragem...")
+        
+        local success, result = pcall(function()
+            return remote:InvokeServer("GetFruits", true)
         end)
         
         if success then
-            print("✅ Loja miragem verificada!")
+            if type(result) == "table" then
+                for _, fruit in pairs(result) do
+                    if type(fruit) == "table" and fruit.Name and fruit.Price then
+                        print(string.format("🌟 %s - 💎 %s fragmentos", fruit.Name, FormatNumber(fruit.Price)))
+                    end
+                end
+            else
+                print("✅ Loja miragem verificada!")
+            end
+        else
+            warn("❌ Erro ao consultar loja miragem:", tostring(result))
         end
     end)
 end)
@@ -1689,57 +1951,59 @@ for i = 1, 3 do
     SeaBtnCorner.CornerRadius = UDim.new(0, 8)
     
     SeaBtn.MouseButton1Click:Connect(function()
-        if Sea ~= i then
-            print("🚀 Teleportando para SEA " .. i .. "...")
-            TeleportToSea(i)
-        else
-            print("✅ Você já está no SEA " .. i)
-        end
+        TeleportToSea(i)
     end)
 end
 
-Section(TeleportTab, "Ilhas")
+Section(TeleportTab, "Ilhas do " .. (Sea == 1 and "Sea 1" or Sea == 2 and "Sea 2" or "Sea 3"))
 
-Dropdown(TeleportTab, "Ilha", CurrentIslands, function(v)
+Dropdown(TeleportTab, "Selecionar Ilha", CurrentIslands, function(v)
     _G.Settings.SelectedIsland = v
 end)
 
-Button(TeleportTab, "🚀 TELEPORTAR", function()
-    if not _G.Settings.SelectedIsland then
-        warn("⚠️ SELECIONE UMA ILHA!")
-        return
-    end
-    
-    if IslandPositions[_G.Settings.SelectedIsland] then
+Button(TeleportTab, "🚀 Teleportar para Ilha", function()
+    if _G.Settings.SelectedIsland and IslandPositions[_G.Settings.SelectedIsland] then
         TP(IslandPositions[_G.Settings.SelectedIsland])
-        print("✅ TP:", _G.Settings.SelectedIsland)
+        print("✅ Teleportado para " .. _G.Settings.SelectedIsland)
+    else
+        warn("⚠️ Selecione uma ilha primeiro!")
     end
 end)
 
 -- =========================
 -- ABA SEA EVENT
 -- =========================
-Section(SeaEventTab, "Sea 2 Events")
+Section(SeaEventTab, "Configurações de Evento")
 
-Toggle(SeaEventTab, "Auto Katakuri", function(v)
+Toggle(SeaEventTab, "Auto Katakuri (Sea 2)", function(v)
     _G.Settings.AutoKatakuri = v
 end)
 
-Toggle(SeaEventTab, "Auto Factory", function(v)
+Toggle(SeaEventTab, "Auto Factory (Sea 2)", function(v)
     _G.Settings.AutoFactory = v
 end)
-
-Section(SeaEventTab, "Todos os Seas")
 
 Toggle(SeaEventTab, "Auto Sea Beast", function(v)
     _G.Settings.AutoSeaBeast = v
 end)
 
+Section(SeaEventTab, "Sistema de Barco")
+
+Dropdown(SeaEventTab, "Barco", {"Nenhum", "PirateBrigade", "PirateGrandBrigade", "MarineBrigade"}, function(v)
+    _G.Settings.SeaEventBoat = v
+end)
+
+Dropdown(SeaEventTab, "Profundidade", {"Mar 1", "Mar 2", "Mar 3", "Mar 4", "Mar 5", "Mar 6"}, function(v)
+    _G.Settings.SeaDepth = v
+end)
+
+Toggle(SeaEventTab, "Ativar Evento Mar", function(v)
+    _G.Settings.SeaEventActive = v
+end)
+
 -- =========================
 -- ABA ESP
 -- =========================
-Section(ESPTab, "ESP Visual")
-
 Toggle(ESPTab, "ESP Frutas", function(v)
     _G.Settings.ESPFruit = v
 end)
@@ -1752,15 +2016,13 @@ Toggle(ESPTab, "ESP Players", function(v)
     _G.Settings.ESPPlayer = v
 end)
 
-Toggle(ESPTab, "ESP Chest (Berry)", function(v)
+Toggle(ESPTab, "ESP Chest", function(v)
     _G.Settings.ESPChest = v
 end)
 
 -- =========================
--- ABA CONFIG (PLAYER)
+-- ABA CONFIG PLAYER
 -- =========================
-Section(PlayerTab, "Configurações do Player")
-
 Toggle(PlayerTab, "Andar na Água", function(v)
     _G.Settings.WalkOnWater = v
 end)
@@ -1771,82 +2033,97 @@ end)
 
 Toggle(PlayerTab, "Anti AFK", function(v)
     _G.Settings.AntiAFK = v
-    if v then
-        LocalPlayer.Idled:Connect(function()
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new())
-        end)
+end)
+
+-- =========================
+-- ABA PVP
+-- =========================
+Toggle(PVPTab, "Auto PVP", function(v)
+    _G.Settings.AutoPVP = v
+end)
+
+local playerList = {}
+for _, player in pairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        table.insert(playerList, player.Name)
+    end
+end
+
+Dropdown(PVPTab, "Jogador", playerList, function(v)
+    _G.Settings.SelectedPlayer = v
+end)
+
+Toggle(PVPTab, "Modo Seguro (30% HP)", function(v)
+    _G.Settings.SafeMode = v
+end)
+
+-- =========================
+-- ANTI AFK
+-- =========================
+task.spawn(function()
+    while task.wait(60) do
+        if _G.Settings.AntiAFK then
+            pcall(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+            end)
+        end
     end
 end)
 
 -- =========================
--- ANIMAÇÃO
+-- CONTROLES DO HUB
 -- =========================
-local function OpenHub()
-    if Config.Aberto then return end
-    Config.Aberto = true
-    
-    Main.Visible = true
-    Main.Size = UDim2.fromScale(0, 0)
-    Main.BackgroundTransparency = 1
-    
-    local targetSize = IsMobile() and UDim2.fromScale(0.9, 0.8) or UDim2.fromScale(0.75, 0.7)
-    
-    Tween(Main, 0.4, {
-        Size = targetSize,
-        BackgroundTransparency = 0.35
-    })
-end
-
-local function CloseHub()
-    if not Config.Aberto then return end
-    
-    Tween(Main, 0.3, {
-        Size = UDim2.fromScale(0, 0),
-        BackgroundTransparency = 1
-    })
-    
-    task.wait(0.3)
-    Main.Visible = false
-    Config.Aberto = false
-end
-
 Bubble.MouseButton1Click:Connect(function()
+    Config.Aberto = not Config.Aberto
+    
     if Config.Aberto then
-        CloseHub()
+        Main.Visible = true
+        Tween(Main, 0.3, {Size = UDim2.fromOffset(IsMobile() and 380 or 500, IsMobile() and 520 or 600)})
     else
-        OpenHub()
+        Tween(Main, 0.3, {Size = UDim2.fromScale(0, 0)})
+        task.wait(0.3)
+        Main.Visible = false
     end
 end)
 
 CloseBtn.MouseButton1Click:Connect(function()
-    CloseHub()
+    Config.Aberto = false
+    Tween(Main, 0.3, {Size = UDim2.fromScale(0, 0)})
+    task.wait(0.3)
+    Main.Visible = false
 end)
 
 -- =========================
--- ANTI-CRASH MOBILE
+-- SISTEMA DE BUSCA
 -- =========================
-if IsMobile() then
-    task.spawn(function()
-        while task.wait(30) do
-            pcall(function()
-                collectgarbage("collect")
-            end)
+Search:GetPropertyChangedSignal("Text"):Connect(function()
+    local searchText = Search.Text:lower()
+    
+    for _, tab in pairs(Tabs) do
+        for _, item in pairs(tab.Frame:GetChildren()) do
+            if item:IsA("Frame") or item:IsA("TextButton") then
+                local textLabel = item:FindFirstChildWhichIsA("TextLabel", true)
+                if textLabel then
+                    local itemText = textLabel.Text:lower()
+                    item.Visible = searchText == "" or itemText:find(searchText) ~= nil
+                end
+            end
         end
-    end)
-end
+    end
+end)
 
 -- =========================
--- INIT
+-- NOTIFICAÇÃO INICIAL
 -- =========================
-task.wait(1)
-print("🚀 Lag Teck Hub v2.0 ULTRA")
-print("✅ Sea:", Sea)
-print("📱 Mobile:", IsMobile())
-print("🎯 Sistema: CORRIGIDO")
-print("💧 Andar na água: DISPONÍVEL")
-print("🌫️ Remover neblina: DISPONÍVEL")
-print("👁️ ESP: COMPLETO")
-print("📍 Teleport Sea: FUNCIONAL")
+print("=================================")
+print("   LAG TECK HUB v2.0 CARREGADO")
+print("=================================")
+print("✅ SEA: " .. Sea)
+print("✅ Level: " .. LocalPlayer.Data.Level.Value)
+print("✅ Discord: discord.gg/RnZ6XHHFj7")
+print("=================================")
 
-OpenHub()
+-- =========================
+-- FIM DO SCRIPT
+-- =========================
