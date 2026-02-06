@@ -28,7 +28,17 @@ _G.Settings = {
     AutoStoreFruit = false,
     AutoBuyFruit = false,
     SelectedFruit = "Leopard-Leopard",
-    AutoRandomFruit = false
+    AutoRandomFruit = false,
+    
+    -- CONFIGURAÇÕES DE FARM
+    WeaponType = "Nenhum", -- Estilo de Luta, Espada, Arma, Fruta
+    FarmDistance = 30,
+    KillAura = false,
+    BringMobs = true,
+    
+    -- TELEPORT
+    SelectedIsland = nil,
+    SelectedSea = 1
 }
 
 -- =========================
@@ -53,11 +63,12 @@ local Sea = GetCurrentSea()
 local Config = {
     Aberto = false,
     Tema = {
-        Fundo = Color3.fromRGB(18,18,18),
-        Secundario = Color3.fromRGB(25,25,25),
-        Botao = Color3.fromRGB(35,35,35),
-        Ativo = Color3.fromRGB(0,170,0),
-        Texto = Color3.fromRGB(255,255,255)
+        Fundo = Color3.fromRGB(10,15,30),
+        Secundario = Color3.fromRGB(15,25,45),
+        Botao = Color3.fromRGB(20,35,60),
+        Ativo = Color3.fromRGB(0,120,255),
+        Texto = Color3.fromRGB(255,255,255),
+        AzulClaro = Color3.fromRGB(50,150,255)
     }
 }
 
@@ -281,16 +292,38 @@ local function GetRemote()
 end
 
 local function EquipWeapon()
+    if _G.Settings.WeaponType == "Nenhum" then
+        return false
+    end
+    
     pcall(function()
+        local weaponMap = {
+            ["Estilo de Luta"] = "Melee",
+            ["Espada"] = "Sword",
+            ["Arma"] = "Gun",
+            ["Fruta"] = "Blox Fruit"
+        }
+        
+        local targetType = weaponMap[_G.Settings.WeaponType]
+        
+        if not targetType then return false end
+        
         for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
-            if tool:IsA("Tool") then
-                if tool.ToolTip == "Melee" or tool.ToolTip == "Sword" or tool.ToolTip == "Blox Fruit" then
-                    LocalPlayer.Character.Humanoid:EquipTool(tool)
-                    return
-                end
+            if tool:IsA("Tool") and tool.ToolTip == targetType then
+                LocalPlayer.Character.Humanoid:EquipTool(tool)
+                return true
+            end
+        end
+        
+        -- Se não achou no backpack, procura equipado
+        for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
+            if tool:IsA("Tool") and tool.ToolTip == targetType then
+                return true
             end
         end
     end)
+    
+    return false
 end
 
 local function Click()
@@ -328,6 +361,73 @@ end)
 spawn(function()
     while task.wait() do
         if _G.Settings.AutoFarmLevel then
+            -- Valida se selecionou arma
+            if _G.Settings.WeaponType == "Nenhum" then
+                warn("⚠️ SELECIONE UM TIPO DE ARMA ANTES DE FARMAR!")
+                _G.Settings.AutoFarmLevel = false
+                continue
+            end
+            
+            pcall(function()
+                local myLevel = LocalPlayer.Data.Level.Value
+                local questInfo = GetQuestByLevel(myLevel)
+                
+                if not questInfo then return end
+                
+                local questGui = LocalPlayer.PlayerGui.Main.Quest
+                
+                if not questGui.Visible then
+                    repeat
+                        TP(questInfo.Pos)
+                        task.wait(0.5)
+                    until (LocalPlayer.Character.HumanoidRootPart.Position - questInfo.Pos.Position).Magnitude < 10 or not _G.Settings.AutoFarmLevel
+                    
+                    if _G.Settings.AutoFarmLevel then
+                        GetRemote():InvokeServer("StartQuest", questInfo.Quest, questInfo.QuestNum)
+                        task.wait(1)
+                    end
+                end
+                
+                if _G.Settings.AutoFarmLevel then
+                    for _, mob in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                        if mob.Name == questInfo.Mob and mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+                            
+                            local weaponEquipped = EquipWeapon()
+                            if not weaponEquipped then
+                                warn("⚠️ NÃO FOI POSSÍVEL EQUIPAR ARMA!")
+                                _G.Settings.AutoFarmLevel = false
+                                break
+                            end
+                            
+                            repeat
+                                task.wait()
+                                
+                                if not _G.Settings.AutoFarmLevel then break end
+                                
+                                if _G.Settings.BringMobs then
+                                    mob.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                                    mob.HumanoidRootPart.Transparency = 1
+                                    mob.Humanoid.WalkSpeed = 0
+                                    mob.Humanoid.JumpPower = 0
+                                    mob.HumanoidRootPart.CanCollide = false
+                                end
+                                
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, _G.Settings.FarmDistance, 0)
+                                
+                                _G.Settings.FastAttack = true
+                                
+                            until not mob.Parent or mob.Humanoid.Health <= 0 or not _G.Settings.AutoFarmLevel or not questGui.Visible
+                            
+                            _G.Settings.FastAttack = false
+                        end
+                    end
+                end
+            end)
+        else
+            _G.Settings.FastAttack = false
+        end
+    end
+end)
             pcall(function()
                 local myLevel = LocalPlayer.Data.Level.Value
                 local questInfo = GetQuestByLevel(myLevel)
@@ -849,6 +949,24 @@ local function Button(parent, texto, callback)
     end)
 end
 
+local function Section(parent, texto)
+    local Box = Instance.new("Frame", parent)
+    Box.Size = UDim2.new(1,0,0,35)
+    Box.BackgroundColor3 = Config.Tema.AzulClaro
+    Box.BackgroundTransparency = 0.5
+    Box.BorderSizePixel = 0
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0,8)
+
+    local Label = Instance.new("TextLabel", Box)
+    Label.Size = UDim2.new(1,0,1,0)
+    Label.Text = "⚙️ " .. texto
+    Label.BackgroundTransparency = 1
+    Label.TextColor3 = Color3.new(1,1,1)
+    Label.Font = Enum.Font.GothamBold
+    Label.TextSize = 14
+    Label.TextXAlignment = Enum.TextXAlignment.Center
+end
+
 -- =========================
 -- CRIANDO ABAS
 -- =========================
@@ -867,7 +985,33 @@ Tween(Tabs["🌴 Farm"].Btn, 0.2, {BackgroundColor3 = Config.Tema.Ativo})
 -- =========================
 -- ABA FARM
 -- =========================
+Section(FarmTab, "Configuração de Upamento")
+
+Dropdown(FarmTab, "Tipo de Arma", {"Nenhum", "Estilo de Luta", "Espada", "Arma", "Fruta"}, function(v)
+    _G.Settings.WeaponType = v
+    print("🔧 Tipo de arma:", v)
+end)
+
+Dropdown(FarmTab, "Distância do NPC", {"20", "30", "40", "50"}, function(v)
+    _G.Settings.FarmDistance = tonumber(v)
+    print("📏 Distância:", v)
+end)
+
+Toggle(FarmTab, "Bring Mobs", function(v)
+    _G.Settings.BringMobs = v
+end)
+
+Toggle(FarmTab, "Kill Aura", function(v)
+    _G.Settings.KillAura = v
+end)
+
+Section(FarmTab, "Auto Farm")
+
 Toggle(FarmTab, "Auto Farm Level", function(v)
+    if v and _G.Settings.WeaponType == "Nenhum" then
+        warn("⚠️ SELECIONE UM TIPO DE ARMA PRIMEIRO!")
+        return
+    end
     _G.Settings.AutoFarmLevel = v
 end)
 
@@ -918,29 +1062,105 @@ Dropdown(FruitTab, "Fruta", FruitList, function(v)
 end)
 
 Button(FruitTab, "📊 Espiar Loja Normal", function()
-    local fruits = GetRemote():InvokeServer("GetFruits")
-    print("=== LOJA NORMAL ===")
-    for i,v in pairs(fruits) do
-        print(v.Name, "-", v.Price)
-    end
+    spawn(function()
+        local success, fruits = pcall(function()
+            return GetRemote():InvokeServer("GetFruits")
+        end)
+        
+        if success and fruits then
+            print("=== 📊 LOJA NORMAL ===")
+            for i, v in pairs(fruits) do
+                if type(v) == "table" then
+                    print(v.Name or "Desconhecido", "-", v.Price or 0, "💎")
+                end
+            end
+            print("========================")
+        else
+            warn("❌ Erro ao buscar frutas da loja!")
+        end
+    end)
 end)
 
 Button(FruitTab, "🌀 Espiar Loja Miragem", function()
-    GetRemote():InvokeServer("GetFruits", LocalPlayer.Character.PrimaryPart.CFrame, true)
+    spawn(function()
+        local success, result = pcall(function()
+            return GetRemote():InvokeServer("GetFruits", LocalPlayer.Character.PrimaryPart.CFrame, true)
+        end)
+        
+        if success then
+            print("=== 🌀 LOJA MIRAGEM ===")
+            if type(result) == "table" then
+                for i, v in pairs(result) do
+                    print(v.Name or "Desconhecido", "-", v.Price or 0, "💎")
+                end
+            else
+                print("Loja verificada!")
+            end
+            print("========================")
+        else
+            warn("❌ Erro ao espiar loja miragem!")
+        end
+    end)
 end)
 
 -- =========================
 -- ABA TELEPORT
 -- =========================
-for _, island in ipairs(CurrentIslands) do
-    Button(TeleportTab, island, function()
-        if IslandPositions[island] then
-            TP(IslandPositions[island])
+Section(TeleportTab, "Selecionar Sea")
+
+-- Botões de Sea
+local SeaButtonsFrame = Instance.new("Frame", TeleportTab)
+SeaButtonsFrame.Size = UDim2.new(1,0,0,50)
+SeaButtonsFrame.BackgroundTransparency = 1
+
+local SeaLayout = Instance.new("UIListLayout", SeaButtonsFrame)
+SeaLayout.FillDirection = Enum.FillDirection.Horizontal
+SeaLayout.Padding = UDim.new(0,5)
+SeaLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+for i = 1, 3 do
+    local SeaBtn = Instance.new("TextButton", SeaButtonsFrame)
+    SeaBtn.Size = UDim2.new(0.3,0,0,45)
+    SeaBtn.Text = "SEA " .. i
+    SeaBtn.BackgroundColor3 = Sea == i and Config.Tema.Ativo or Config.Tema.Botao
+    SeaBtn.BackgroundTransparency = 0.3
+    SeaBtn.TextColor3 = Color3.new(1,1,1)
+    SeaBtn.Font = Enum.Font.GothamBold
+    SeaBtn.TextSize = 14
+    SeaBtn.BorderSizePixel = 0
+    Instance.new("UICorner", SeaBtn).CornerRadius = UDim.new(0,8)
+    
+    SeaBtn.MouseButton1Click:Connect(function()
+        if Sea ~= i then
+            warn("⚠️ Você está no SEA " .. Sea .. "! Entre no SEA " .. i .. " pelo menu do jogo.")
         else
-            warn("Coordenadas não encontradas para:", island)
+            print("✅ Você já está no SEA " .. i)
         end
     end)
 end
+
+Section(TeleportTab, "Selecionar Ilha")
+
+local islandOptions = Sea == 1 and IslandsSea1 or Sea == 2 and IslandsSea2 or IslandsSea3
+
+Dropdown(TeleportTab, "Ilha", islandOptions, function(v)
+    _G.Settings.SelectedIsland = v
+    print("🗺️ Ilha selecionada:", v)
+end)
+
+Button(TeleportTab, "🚀 TELEPORTAR", function()
+    if not _G.Settings.SelectedIsland then
+        warn("⚠️ SELECIONE UMA ILHA PRIMEIRO!")
+        return
+    end
+    
+    if IslandPositions[_G.Settings.SelectedIsland] then
+        TP(IslandPositions[_G.Settings.SelectedIsland])
+        print("✅ Teleportando para:", _G.Settings.SelectedIsland)
+    else
+        warn("❌ Coordenadas não encontradas!")
+    end
+end)
 
 -- =========================
 -- ABA PLAYER
