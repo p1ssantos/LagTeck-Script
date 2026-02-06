@@ -86,7 +86,7 @@ local Sea = GetCurrentSea()
 -- =========================
 -- CONFIGURAÇÕES HUB
 -- =========================
-local Config = {
+Config = {
     Aberto = false,
     Tema = {
         Fundo = Color3.fromRGB(10,15,30),
@@ -94,7 +94,9 @@ local Config = {
         Botao = Color3.fromRGB(20,35,60),
         Ativo = Color3.fromRGB(0,120,255),
         Texto = Color3.fromRGB(255,255,255),
-        AzulClaro = Color3.fromRGB(50,150,255)
+        AzulClaro = Color3.fromRGB(50,150,255),
+        Verde = Color3.fromRGB(0, 255, 0),      -- ← ADICIONE
+        Vermelho = Color3.fromRGB(255, 0, 0)    -- ← ADICIONE
     }
 }
 
