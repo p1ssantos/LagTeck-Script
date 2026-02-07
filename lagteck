@@ -974,3 +974,3010 @@ task.spawn(function()
         end
     end
 end)
+
+-- =========================
+-- AUTO GET CDK (CURSED DUAL KATANA)
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetCDK and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem CDK
+                local hasCDK = false
+                for _, v in pairs(LocalPlayer.Backpack:GetChildren()) do
+                    if v.Name == "Cursed Dual Katana" then
+                        hasCDK = true
+                        break
+                    end
+                end
+                
+                if hasCDK then
+                    Notify("✅ Você já tem a CDK!")
+                    _G.Settings.AutoGetCDK = false
+                    return
+                end
+                
+                -- Passo 1: Pegar Tushita
+                if not LocalPlayer.Backpack:FindFirstChild("Tushita") and not LocalPlayer.Character:FindFirstChild("Tushita") then
+                    Notify("📌 Farmando para Tushita...")
+                    -- Farmar Longma (boss que dropka Tushita)
+                    for _, boss in pairs(workspace.Enemies:GetChildren()) do
+                        if boss.Name == "Longma" and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+                            repeat
+                                task.wait()
+                                EquipWeapon()
+                                boss.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = boss.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                                _G.Settings.FastAttack = true
+                            until not boss.Parent or boss.Humanoid.Health <= 0 or not _G.Settings.AutoGetCDK
+                            _G.Settings.FastAttack = false
+                        end
+                    end
+                end
+                
+                -- Passo 2: Pegar Yama
+                if not LocalPlayer.Backpack:FindFirstChild("Yama") and not LocalPlayer.Character:FindFirstChild("Yama") then
+                    Notify("📌 Farmando para Yama...")
+                    -- Comprar Yama do NPC
+                    TP(CFrame.new(-2777, 14, -3037))
+                    task.wait(1)
+                    remote:InvokeServer("BuyItem", "Yama")
+                end
+                
+                -- Passo 3: Combinar para fazer CDK
+                if (LocalPlayer.Backpack:FindFirstChild("Tushita") or LocalPlayer.Character:FindFirstChild("Tushita")) and
+                   (LocalPlayer.Backpack:FindFirstChild("Yama") or LocalPlayer.Character:FindFirstChild("Yama")) then
+                    Notify("📌 Combinando Tushita + Yama = CDK...")
+                    TP(CFrame.new(-12361, 603, -6550)) -- Mysterious Man location
+                    task.wait(2)
+                    remote:InvokeServer("CursedDualKatana", "1")
+                    task.wait(1)
+                    remote:InvokeServer("CursedDualKatana", "2")
+                    Notify("✅ CDK Obtida!")
+                    _G.Settings.AutoGetCDK = false
+                end
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET SOUL GUITAR
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetSoulGuitar and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem Soul Guitar
+                local hasGuitar = false
+                for _, v in pairs(LocalPlayer.Backpack:GetChildren()) do
+                    if v.Name == "Soul Guitar" then
+                        hasGuitar = true
+                        break
+                    end
+                end
+                
+                if hasGuitar then
+                    Notify("✅ Você já tem a Soul Guitar!")
+                    _G.Settings.AutoGetSoulGuitar = false
+                    return
+                end
+                
+                -- Farmar fragmentos necessários
+                Notify("📌 Farmando fragmentos para Soul Guitar...")
+                
+                -- Ir para Haunted Castle
+                TP(CFrame.new(-9515, 142, 5566))
+                task.wait(2)
+                
+                -- Interagir com o puzzle
+                remote:InvokeServer("gravestoneEvent", 1)
+                task.wait(1)
+                remote:InvokeServer("gravestoneEvent", 2)
+                task.wait(1)
+                
+                -- Farmar Soul Reaper para conseguir Soul Guitar
+                for _, boss in pairs(workspace.Enemies:GetChildren()) do
+                    if boss.Name == "Soul Reaper" and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+                        repeat
+                            task.wait()
+                            EquipWeapon()
+                            boss.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = boss.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                            _G.Settings.FastAttack = true
+                        until not boss.Parent or boss.Humanoid.Health <= 0 or not _G.Settings.AutoGetSoulGuitar
+                        _G.Settings.FastAttack = false
+                    end
+                end
+                
+                -- Comprar Soul Guitar
+                task.wait(2)
+                remote:InvokeServer("SoulGuitarShop", "Buy")
+                Notify("✅ Soul Guitar obtida!")
+                _G.Settings.AutoGetSoulGuitar = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET DARK STEP V1
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetDarkStep then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Dark Step") or LocalPlayer.Character:FindFirstChild("Dark Step") then
+                    Notify("✅ Você já tem Dark Step!")
+                    _G.Settings.AutoGetDarkStep = false
+                    return
+                end
+                
+                -- Requisitos: Level 150+, $150,000
+                if LocalPlayer.Data.Level.Value < 150 then
+                    Notify("⚠️ Precisa de Level 150+")
+                    _G.Settings.AutoGetDarkStep = false
+                    return
+                end
+                
+                if LocalPlayer.Data.Beli.Value < 150000 then
+                    Notify("⚠️ Precisa de $150,000")
+                    _G.Settings.AutoGetDarkStep = false
+                    return
+                end
+                
+                -- Teleportar para o NPC
+                if Sea == 1 then
+                    TP(CFrame.new(-2209, 24, -3838)) -- Dark Step Teacher SEA 1
+                elseif Sea == 2 then
+                    TP(CFrame.new(-5439, 6, -2542)) -- Dark Step Teacher SEA 2
+                else
+                    TP(CFrame.new(-13580, 492, -5533)) -- Dark Step Teacher SEA 3
+                end
+                
+                task.wait(2)
+                remote:InvokeServer("BuyBlackLeg")
+                Notify("✅ Dark Step obtido!")
+                _G.Settings.AutoGetDarkStep = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET ELECTRIC V1
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetElectric then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Electric") or LocalPlayer.Character:FindFirstChild("Electric") then
+                    Notify("✅ Você já tem Electric!")
+                    _G.Settings.AutoGetElectric = false
+                    return
+                end
+                
+                -- Requisitos: Level 330+, $500,000
+                if LocalPlayer.Data.Level.Value < 330 then
+                    Notify("⚠️ Precisa de Level 330+")
+                    _G.Settings.AutoGetElectric = false
+                    return
+                end
+                
+                if LocalPlayer.Data.Beli.Value < 500000 then
+                    Notify("⚠️ Precisa de $500,000")
+                    _G.Settings.AutoGetElectric = false
+                    return
+                end
+                
+                -- Teleportar para o NPC
+                if Sea == 1 then
+                    TP(CFrame.new(-5389, 314, -2967)) -- Electric Teacher SEA 1
+                elseif Sea == 2 then
+                    TP(CFrame.new(-5839, 12, -1954)) -- Electric Teacher SEA 2
+                else
+                    TP(CFrame.new(-12548, 337, -7481)) -- Electric Teacher SEA 3
+                end
+                
+                task.wait(2)
+                remote:InvokeServer("BuyElectro")
+                Notify("✅ Electric obtido!")
+                _G.Settings.AutoGetElectric = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET WATER KUNG FU V1
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetWaterKungFu then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Fishman Karate") or LocalPlayer.Character:FindFirstChild("Fishman Karate") then
+                    Notify("✅ Você já tem Water Kung Fu!")
+                    _G.Settings.AutoGetWaterKungFu = false
+                    return
+                end
+                
+                -- Requisitos: Level 400+, $750,000
+                if LocalPlayer.Data.Level.Value < 400 then
+                    Notify("⚠️ Precisa de Level 400+")
+                    _G.Settings.AutoGetWaterKungFu = false
+                    return
+                end
+                
+                if LocalPlayer.Data.Beli.Value < 750000 then
+                    Notify("⚠️ Precisa de $750,000")
+                    _G.Settings.AutoGetWaterKungFu = false
+                    return
+                end
+                
+                -- Teleportar para Underwater City
+                TP(CFrame.new(61164, 5, 1819))
+                task.wait(2)
+                remote:InvokeServer("BuyFishmanKarate")
+                Notify("✅ Water Kung Fu obtido!")
+                _G.Settings.AutoGetWaterKungFu = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET DRAGON BREATH V1
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetDragonBreath then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Dragon Claw") or LocalPlayer.Character:FindFirstChild("Dragon Claw") then
+                    Notify("✅ Você já tem Dragon Breath!")
+                    _G.Settings.AutoGetDragonBreath = false
+                    return
+                end
+                
+                -- Requisitos: Level 400+, $1,500,000
+                if LocalPlayer.Data.Level.Value < 400 then
+                    Notify("⚠️ Precisa de Level 400+")
+                    _G.Settings.AutoGetDragonBreath = false
+                    return
+                end
+                
+                if LocalPlayer.Data.Beli.Value < 1500000 then
+                    Notify("⚠️ Precisa de $1,500,000")
+                    _G.Settings.AutoGetDragonBreath = false
+                    return
+                end
+                
+                -- Teleportar para Dragon Teacher
+                if Sea == 1 then
+                    TP(CFrame.new(-2970, 12, 5609)) -- Dragon Teacher SEA 1
+                elseif Sea == 2 then
+                    TP(CFrame.new(-5424, 6, -2552)) -- Dragon Teacher SEA 2
+                else
+                    TP(CFrame.new(-13395, 453, -7985)) -- Dragon Teacher SEA 3
+                end
+                
+                task.wait(2)
+                remote:InvokeServer("BlackbeardReward", "DragonClaw", "1")
+                remote:InvokeServer("BlackbeardReward", "DragonClaw", "2")
+                Notify("✅ Dragon Breath obtido!")
+                _G.Settings.AutoGetDragonBreath = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET SUPERHUMAN V1
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetSuperhuman then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Superhuman") or LocalPlayer.Character:FindFirstChild("Superhuman") then
+                    Notify("✅ Você já tem Superhuman!")
+                    _G.Settings.AutoGetSuperhuman = false
+                    return
+                end
+                
+                -- Requisitos: Level 300+, $3,000,000, ter Dark Step, Electric e Water Kung Fu
+                if LocalPlayer.Data.Level.Value < 300 then
+                    Notify("⚠️ Precisa de Level 300+")
+                    _G.Settings.AutoGetSuperhuman = false
+                    return
+                end
+                
+                if LocalPlayer.Data.Beli.Value < 3000000 then
+                    Notify("⚠️ Precisa de $3,000,000")
+                    _G.Settings.AutoGetSuperhuman = false
+                    return
+                end
+                
+                -- Verificar se tem os 3 estilos base
+                local hasDarkStep = LocalPlayer.Backpack:FindFirstChild("Dark Step") or LocalPlayer.Character:FindFirstChild("Dark Step")
+                local hasElectric = LocalPlayer.Backpack:FindFirstChild("Electric") or LocalPlayer.Character:FindFirstChild("Electric")
+                local hasWaterKungFu = LocalPlayer.Backpack:FindFirstChild("Fishman Karate") or LocalPlayer.Character:FindFirstChild("Fishman Karate")
+                
+                if not (hasDarkStep and hasElectric and hasWaterKungFu) then
+                    Notify("⚠️ Precisa ter Dark Step, Electric e Water Kung Fu primeiro!")
+                    _G.Settings.AutoGetSuperhuman = false
+                    return
+                end
+                
+                -- Teleportar para Martial Arts Teacher
+                if Sea == 2 then
+                    TP(CFrame.new(-5424, 6, -2552))
+                else
+                    TP(CFrame.new(-13395, 453, -7985))
+                end
+                
+                task.wait(2)
+                remote:InvokeServer("BuySuperhuman")
+                Notify("✅ Superhuman obtido!")
+                _G.Settings.AutoGetSuperhuman = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET DEATH STEP V2
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetDeathStep and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Death Step") or LocalPlayer.Character:FindFirstChild("Death Step") then
+                    Notify("✅ Você já tem Death Step!")
+                    _G.Settings.AutoGetDeathStep = false
+                    return
+                end
+                
+                -- Requisitos: Level 1500+, $5,000,000, 300 Mastery em Dark Step
+                if LocalPlayer.Data.Level.Value < 1500 then
+                    Notify("⚠️ Precisa de Level 1500+")
+                    _G.Settings.AutoGetDeathStep = false
+                    return
+                end
+                
+                if LocalPlayer.Data.Beli.Value < 5000000 then
+                    Notify("⚠️ Precisa de $5,000,000")
+                    _G.Settings.AutoGetDeathStep = false
+                    return
+                end
+                
+                -- Verificar se tem Dark Step
+                if not (LocalPlayer.Backpack:FindFirstChild("Dark Step") or LocalPlayer.Character:FindFirstChild("Dark Step")) then
+                    Notify("⚠️ Precisa ter Dark Step primeiro!")
+                    _G.Settings.AutoGetDeathStep = false
+                    return
+                end
+                
+                -- Teleportar para Cipher Pol (NPC que ensina Death Step)
+                TP(CFrame.new(-5362, 12, -5251)) -- Death Step Teacher SEA 3
+                task.wait(2)
+                
+                -- Completar a quest
+                remote:InvokeServer("BuyDeathStep")
+                Notify("✅ Death Step obtido!")
+                _G.Settings.AutoGetDeathStep = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET SHARKMAN KARATE V2
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetSharkmanKarate and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Sharkman Karate") or LocalPlayer.Character:FindFirstChild("Sharkman Karate") then
+                    Notify("✅ Você já tem Sharkman Karate!")
+                    _G.Settings.AutoGetSharkmanKarate = false
+                    return
+                end
+                
+                -- Requisitos: Level 1500+, $5,000,000, 300 Mastery em Fishman Karate
+                if LocalPlayer.Data.Level.Value < 1500 then
+                    Notify("⚠️ Precisa de Level 1500+")
+                    _G.Settings.AutoGetSharkmanKarate = false
+                    return
+                end
+                
+                if LocalPlayer.Data.Beli.Value < 5000000 then
+                    Notify("⚠️ Precisa de $5,000,000")
+                    _G.Settings.AutoGetSharkmanKarate = false
+                    return
+                end
+                
+                -- Verificar se tem Fishman Karate
+                if not (LocalPlayer.Backpack:FindFirstChild("Fishman Karate") or LocalPlayer.Character:FindFirstChild("Fishman Karate")) then
+                    Notify("⚠️ Precisa ter Fishman Karate primeiro!")
+                    _G.Settings.AutoGetSharkmanKarate = false
+                    return
+                end
+                
+                -- Teleportar para Daigrock (NPC que ensina Sharkman Karate)
+                TP(CFrame.new(-13348, 332, -7627)) -- Sharkman Karate Teacher SEA 3
+                task.wait(2)
+                
+                -- Completar a quest
+                remote:InvokeServer("BuySharkmanKarate")
+                Notify("✅ Sharkman Karate obtido!")
+                _G.Settings.AutoGetSharkmanKarate = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET DRAGON TALON V2
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetDragonTalon and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Dragon Talon") or LocalPlayer.Character:FindFirstChild("Dragon Talon") then
+                    Notify("✅ Você já tem Dragon Talon!")
+                    _G.Settings.AutoGetDragonTalon = false
+                    return
+                end
+                
+                -- Requisitos: Level 1500+, $5,000,000, 300 Mastery em Dragon Claw
+                if LocalPlayer.Data.Level.Value < 1500 then
+                    Notify("⚠️ Precisa de Level 1500+")
+                    _G.Settings.AutoGetDragonTalon = false
+                    return
+                end
+                
+                if LocalPlayer.Data.Beli.Value < 5000000 then
+                    Notify("⚠️ Precisa de $5,000,000")
+                    _G.Settings.AutoGetDragonTalon = false
+                    return
+                end
+                
+                -- Verificar se tem Dragon Claw
+                if not (LocalPlayer.Backpack:FindFirstChild("Dragon Claw") or LocalPlayer.Character:FindFirstChild("Dragon Claw")) then
+                    Notify("⚠️ Precisa ter Dragon Claw primeiro!")
+                    _G.Settings.AutoGetDragonTalon = false
+                    return
+                end
+                
+                -- Teleportar para Uzoth (NPC que ensina Dragon Talon)
+                TP(CFrame.new(-13341, 453, -7985)) -- Dragon Talon Teacher SEA 3
+                task.wait(2)
+                
+                -- Completar a quest - Fire Essence puzzle
+                remote:InvokeServer("BlackbeardReward", "DragonTalon", "1")
+                task.wait(1)
+                remote:InvokeServer("BlackbeardReward", "DragonTalon", "2")
+                Notify("✅ Dragon Talon obtido!")
+                _G.Settings.AutoGetDragonTalon = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET ELECTRIC CLAW V2
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetElectricClaw and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Electric Claw") or LocalPlayer.Character:FindFirstChild("Electric Claw") then
+                    Notify("✅ Você já tem Electric Claw!")
+                    _G.Settings.AutoGetElectricClaw = false
+                    return
+                end
+                
+                -- Requisitos: Level 1500+, $3,000,000, 300 Mastery em Electro, ter Raça de Cyborg
+                if LocalPlayer.Data.Level.Value < 1500 then
+                    Notify("⚠️ Precisa de Level 1500+")
+                    _G.Settings.AutoGetElectricClaw = false
+                    return
+                end
+                
+                if LocalPlayer.Data.Beli.Value < 3000000 then
+                    Notify("⚠️ Precisa de $3,000,000")
+                    _G.Settings.AutoGetElectricClaw = false
+                    return
+                end
+                
+                -- Verificar se tem Electric
+                if not (LocalPlayer.Backpack:FindFirstChild("Electric") or LocalPlayer.Character:FindFirstChild("Electric")) then
+                    Notify("⚠️ Precisa ter Electric primeiro!")
+                    _G.Settings.AutoGetElectricClaw = false
+                    return
+                end
+                
+                -- Teleportar para Mad Scientist (SEA 3)
+                TP(CFrame.new(-12548, 337, -7481)) -- Electric Claw Teacher
+                task.wait(2)
+                
+                -- Comprar Electric Claw
+                remote:InvokeServer("BuyElectricClaw")
+                Notify("✅ Electric Claw obtido!")
+                _G.Settings.AutoGetElectricClaw = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET GODHUMAN V3
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetGodhuman and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Godhuman") or LocalPlayer.Character:FindFirstChild("Godhuman") then
+                    Notify("✅ Você já tem Godhuman!")
+                    _G.Settings.AutoGetGodhuman = false
+                    return
+                end
+                
+                -- Requisitos: Level 2200+, $5,000,000, ter todos os V2 (Death Step, Sharkman Karate, Dragon Talon, Electric Claw, Superhuman)
+                if LocalPlayer.Data.Level.Value < 2200 then
+                    Notify("⚠️ Precisa de Level 2200+")
+                    _G.Settings.AutoGetGodhuman = false
+                    return
+                end
+                
+                if LocalPlayer.Data.Beli.Value < 5000000 then
+                    Notify("⚠️ Precisa de $5,000,000")
+                    _G.Settings.AutoGetGodhuman = false
+                    return
+                end
+                
+                -- Verificar se tem todos os estilos V2
+                local hasDeathStep = LocalPlayer.Backpack:FindFirstChild("Death Step") or LocalPlayer.Character:FindFirstChild("Death Step")
+                local hasSharkman = LocalPlayer.Backpack:FindFirstChild("Sharkman Karate") or LocalPlayer.Character:FindFirstChild("Sharkman Karate")
+                local hasDragonTalon = LocalPlayer.Backpack:FindFirstChild("Dragon Talon") or LocalPlayer.Character:FindFirstChild("Dragon Talon")
+                local hasElectricClaw = LocalPlayer.Backpack:FindFirstChild("Electric Claw") or LocalPlayer.Character:FindFirstChild("Electric Claw")
+                local hasSuperhuman = LocalPlayer.Backpack:FindFirstChild("Superhuman") or LocalPlayer.Character:FindFirstChild("Superhuman")
+                
+                if not (hasDeathStep and hasSharkman and hasDragonTalon and hasElectricClaw and hasSuperhuman) then
+                    Notify("⚠️ Precisa ter TODOS os estilos V2 + Superhuman!")
+                    _G.Settings.AutoGetGodhuman = false
+                    return
+                end
+                
+                -- Teleportar para Ancient Monk
+                TP(CFrame.new(-12361, 603, -6550)) -- Godhuman Teacher SEA 3
+                task.wait(2)
+                
+                -- Comprar Godhuman
+                remote:InvokeServer("BuyGodhuman")
+                Notify("✅ Godhuman obtido!")
+                _G.Settings.AutoGetGodhuman = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET SANGUINE ART V3
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetSanguineArt and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Sanguine Art") or LocalPlayer.Character:FindFirstChild("Sanguine Art") then
+                    Notify("✅ Você já tem Sanguine Art!")
+                    _G.Settings.AutoGetSanguineArt = false
+                    return
+                end
+                
+                -- Requisitos: Level 2200+, raça Ghoul V4, completar trial
+                if LocalPlayer.Data.Level.Value < 2200 then
+                    Notify("⚠️ Precisa de Level 2200+")
+                    _G.Settings.AutoGetSanguineArt = false
+                    return
+                end
+                
+                -- Verificar raça Ghoul
+                local race = LocalPlayer.Data.Race.Value
+                if race ~= "Ghoul" then
+                    Notify("⚠️ Precisa ser raça Ghoul!")
+                    _G.Settings.AutoGetSanguineArt = false
+                    return
+                end
+                
+                -- Teleportar para Graveyard
+                TP(CFrame.new(-5560, 314, -2733))
+                task.wait(2)
+                
+                -- Fazer a quest do Dough King
+                Notify("📌 Farmando Dough King para Sanguine Art...")
+                for _, boss in pairs(workspace.Enemies:GetChildren()) do
+                    if boss.Name == "Dough King" and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+                        repeat
+                            task.wait()
+                            EquipWeapon()
+                            boss.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = boss.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                            _G.Settings.FastAttack = true
+                        until not boss.Parent or boss.Humanoid.Health <= 0 or not _G.Settings.AutoGetSanguineArt
+                        _G.Settings.FastAttack = false
+                    end
+                end
+                
+                -- Comprar Sanguine Art após derrotar Dough King
+                task.wait(2)
+                remote:InvokeServer("BuySanguineArt")
+                Notify("✅ Sanguine Art obtido!")
+                _G.Settings.AutoGetSanguineArt = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET TTK (TRIPLE KATANA)
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetTTK and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem
+                if LocalPlayer.Backpack:FindFirstChild("Triple Katana") or LocalPlayer.Character:FindFirstChild("Triple Katana") then
+                    Notify("✅ Você já tem Triple Katana!")
+                    _G.Settings.AutoGetTTK = false
+                    return
+                end
+                
+                -- Requisitos: Level 1800+, 300 Mastery em pelo menos 3 espadas diferentes
+                if LocalPlayer.Data.Level.Value < 1800 then
+                    Notify("⚠️ Precisa de Level 1800+")
+                    _G.Settings.AutoGetTTK = false
+                    return
+                end
+                
+                -- Teleportar para Mysterious Man (Haunted Castle)
+                TP(CFrame.new(-9515, 142, 5566))
+                task.wait(2)
+                
+                -- Comprar Triple Katana
+                remote:InvokeServer("BuyTripleKatana")
+                Notify("✅ Triple Katana obtida!")
+                _G.Settings.AutoGetTTK = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET RACE V2
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetRaceV2 and Sea == 2 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem V2
+                if LocalPlayer.Data.Race.Value and LocalPlayer.Data.Race.Value:find("V2") then
+                    Notify("✅ Você já tem Raça V2!")
+                    _G.Settings.AutoGetRaceV2 = false
+                    return
+                end
+                
+                -- Requisitos: Level 1000+, $3,000,000
+                if LocalPlayer.Data.Level.Value < 1000 then
+                    Notify("⚠️ Precisa de Level 1000+")
+                    _G.Settings.AutoGetRaceV2 = false
+                    return
+                end
+                
+                if LocalPlayer.Data.Beli.Value < 3000000 then
+                    Notify("⚠️ Precisa de $3,000,000")
+                    _G.Settings.AutoGetRaceV2 = false
+                    return
+                end
+                
+                -- Teleportar para Experimic (SEA 2)
+                TP(CFrame.new(-2836, 14, -3036)) -- Race Awakening NPC
+                task.wait(2)
+                
+                -- Comprar V2
+                remote:InvokeServer("Wenlocktoad", "1")
+                task.wait(1)
+                remote:InvokeServer("Wenlocktoad", "2")
+                Notify("✅ Raça V2 obtida!")
+                _G.Settings.AutoGetRaceV2 = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET RACE V3
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetRaceV3 and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem V3
+                if LocalPlayer.Data.Race.Value and LocalPlayer.Data.Race.Value:find("V3") then
+                    Notify("✅ Você já tem Raça V3!")
+                    _G.Settings.AutoGetRaceV3 = false
+                    return
+                end
+                
+                -- Verificar se tem V2
+                if not (LocalPlayer.Data.Race.Value and LocalPlayer.Data.Race.Value:find("V2")) then
+                    Notify("⚠️ Precisa ter Raça V2 primeiro!")
+                    _G.Settings.AutoGetRaceV3 = false
+                    return
+                end
+                
+                -- Requisitos: Level 1500+, completar Arowe's Quest
+                if LocalPlayer.Data.Level.Value < 1500 then
+                    Notify("⚠️ Precisa de Level 1500+")
+                    _G.Settings.AutoGetRaceV3 = false
+                    return
+                end
+                
+                -- Teleportar para Great Tree (Arowe's location)
+                TP(CFrame.new(2681, 1682, -7190))
+                task.wait(2)
+                
+                -- Pegar a quest do Arowe
+                remote:InvokeServer("Arowe", "1")
+                task.wait(1)
+                
+                -- Completar a quest baseado na raça
+                local race = LocalPlayer.Data.Race.Value
+                
+                if race:find("Human") then
+                    -- Matar 2 Don Swans
+                    Notify("📌 Matando Don Swans para V3...")
+                    local donSwanKills = 0
+                    while donSwanKills < 2 and _G.Settings.AutoGetRaceV3 do
+                        for _, boss in pairs(workspace.Enemies:GetChildren()) do
+                            if boss.Name == "Don Swan" and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+                                repeat
+                                    task.wait()
+                                    EquipWeapon()
+                                    boss.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                                    LocalPlayer.Character.HumanoidRootPart.CFrame = boss.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                                    _G.Settings.FastAttack = true
+                                until not boss.Parent or boss.Humanoid.Health <= 0 or not _G.Settings.AutoGetRaceV3
+                                _G.Settings.FastAttack = false
+                                donSwanKills = donSwanKills + 1
+                            end
+                        end
+                        task.wait(5)
+                    end
+                    
+                elseif race:find("Fishman") then
+                    -- Ganhar água usando Water Key
+                    Notify("📌 Completando puzzle da água...")
+                    TP(CFrame.new(-3602, 239, -10156))
+                    task.wait(2)
+                    remote:InvokeServer("Arowe", "2")
+                    
+                elseif race:find("Skypiea") or race:find("Sky") then
+                    -- Ir para as nuvens
+                    Notify("📌 Indo para as nuvens...")
+                    TP(CFrame.new(-7894, 5547, -379))
+                    task.wait(5)
+                    remote:InvokeServer("Arowe", "2")
+                    
+                elseif race:find("Mink") then
+                    -- Acertar 30 hits consecutivos usando Combat
+                    Notify("📌 Completando desafio de combate...")
+                    TP(CFrame.new(-2103, 38, -10192))
+                    task.wait(2)
+                    -- Equipar Combat
+                    for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
+                        if tool:IsA("Tool") and tool.ToolTip == "Melee" then
+                            LocalPlayer.Character.Humanoid:EquipTool(tool)
+                            break
+                        end
+                    end
+                    task.wait(1)
+                    remote:InvokeServer("Arowe", "2")
+                    
+                elseif race:find("Ghoul") then
+                    -- Matar 3 bosses durante a noite
+                    Notify("📌 Matando bosses durante a noite...")
+                    local bossKills = 0
+                    while bossKills < 3 and _G.Settings.AutoGetRaceV3 do
+                        -- Esperar pela noite
+                        while Lighting.ClockTime < 18 and Lighting.ClockTime >= 6 do
+                            task.wait(1)
+                        end
+                        
+                        for _, boss in pairs(workspace.Enemies:GetChildren()) do
+                            if boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 and boss:FindFirstChild("HumanoidRootPart") then
+                                local isBoss = false
+                                for _, bossName in pairs(BossList) do
+                                    if boss.Name == bossName then
+                                        isBoss = true
+                                        break
+                                    end
+                                end
+                                
+                                if isBoss then
+                                    repeat
+                                        task.wait()
+                                        EquipWeapon()
+                                        boss.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                                        LocalPlayer.Character.HumanoidRootPart.CFrame = boss.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                                        _G.Settings.FastAttack = true
+                                    until not boss.Parent or boss.Humanoid.Health <= 0 or not _G.Settings.AutoGetRaceV3
+                                    _G.Settings.FastAttack = false
+                                    bossKills = bossKills + 1
+                                    break
+                                end
+                            end
+                        end
+                        task.wait(5)
+                    end
+                    
+                elseif race:find("Cyborg") then
+                    -- Ganhar 5000 fragmentos
+                    Notify("📌 Farmando fragmentos...")
+                    while LocalPlayer.Data.Fragments.Value < 5000 and _G.Settings.AutoGetRaceV3 do
+                        -- Farmar raids ou sea beasts
+                        task.wait(5)
+                    end
+                end
+                
+                -- Completar a quest
+                task.wait(2)
+                TP(CFrame.new(2681, 1682, -7190))
+                task.wait(2)
+                remote:InvokeServer("Arowe", "3")
+                Notify("✅ Raça V3 obtida!")
+                _G.Settings.AutoGetRaceV3 = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET RACE V4
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoGetRaceV4 and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se já tem V4
+                if LocalPlayer.Data.Race.Value and LocalPlayer.Data.Race.Value:find("V4") then
+                    Notify("✅ Você já tem Raça V4!")
+                    _G.Settings.AutoGetRaceV4 = false
+                    return
+                end
+                
+                -- Verificar se tem V3
+                if not (LocalPlayer.Data.Race.Value and LocalPlayer.Data.Race.Value:find("V3")) then
+                    Notify("⚠️ Precisa ter Raça V3 primeiro!")
+                    _G.Settings.AutoGetRaceV4 = false
+                    return
+                end
+                
+                -- Requisitos: Level 2000+, completar Temple of Time trial
+                if LocalPlayer.Data.Level.Value < 2000 then
+                    Notify("⚠️ Precisa de Level 2000+")
+                    _G.Settings.AutoGetRaceV4 = false
+                    return
+                end
+                
+                -- Encontrar Mirage Island
+                Notify("📌 Procurando Mirage Island...")
+                local mirageFound = false
+                for _, v in pairs(workspace:GetChildren()) do
+                    if v.Name == "MysticIsland" then
+                        TP(v:FindFirstChild("Center") and v.Center.CFrame or CFrame.new(v:GetModelCFrame().Position))
+                        mirageFound = true
+                        Notify("✅ Mirage encontrada!")
+                        break
+                    end
+                end
+                
+                if not mirageFound then
+                    Notify("⚠️ Mirage Island não spawnou ainda!")
+                    return
+                end
+                
+                -- Ir para Temple of Time (dentro da Mirage)
+                task.wait(2)
+                TP(CFrame.new(-5413, 314, -2823)) -- Temple entrance
+                task.wait(2)
+                
+                -- Completar o trial baseado na raça
+                local race = LocalPlayer.Data.Race.Value
+                Notify("📌 Completando trial de " .. race .. "...")
+                
+                -- Puxar alavanca do trial
+                remote:InvokeServer("TempleOfTime", "1")
+                task.wait(2)
+                
+                -- Trial específico por raça
+                if race:find("Human") then
+                    -- Sobreviver por 5 minutos
+                    Notify("⏱️ Sobreviva por 5 minutos!")
+                    task.wait(300)
+                    
+                elseif race:find("Fishman") then
+                    -- Coletar 20 esferas de água
+                    Notify("💧 Colete 20 esferas de água!")
+                    local collected = 0
+                    while collected < 20 and _G.Settings.AutoGetRaceV4 do
+                        for _, orb in pairs(workspace:GetChildren()) do
+                            if orb.Name == "WaterOrb" then
+                                TP(orb.CFrame)
+                                task.wait(0.5)
+                                collected = collected + 1
+                            end
+                        end
+                        task.wait(1)
+                    end
+                    
+                elseif race:find("Skypiea") or race:find("Sky") then
+                    -- Não tocar no chão por 2 minutos
+                    Notify("☁️ Não toque no chão por 2 minutos!")
+                    local startTime = tick()
+                    while tick() - startTime < 120 and _G.Settings.AutoGetRaceV4 do
+                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 50, 0)
+                        end
+                        task.wait(0.5)
+                    end
+                    
+                elseif race:find("Mink") then
+                    -- Completar em menos de 2 minutos
+                    Notify("⚡ Complete em menos de 2 minutos!")
+                    -- Speed run do trial
+                    task.wait(1)
+                    
+                elseif race:find("Ghoul") then
+                    -- Matar 10 inimigos
+                    Notify("💀 Mate 10 inimigos!")
+                    local kills = 0
+                    while kills < 10 and _G.Settings.AutoGetRaceV4 do
+                        for _, mob in pairs(workspace.Enemies:GetChildren()) do
+                            if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                                repeat
+                                    task.wait()
+                                    EquipWeapon()
+                                    LocalPlayer.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                                    _G.Settings.FastAttack = true
+                                until not mob.Parent or mob.Humanoid.Health <= 0 or kills >= 10
+                                _G.Settings.FastAttack = false
+                                kills = kills + 1
+                                break
+                            end
+                        end
+                        task.wait(1)
+                    end
+                    
+                elseif race:find("Cyborg") then
+                    -- Hackear 3 terminais
+                    Notify("🤖 Hackear 3 terminais!")
+                    local hacked = 0
+                    while hacked < 3 and _G.Settings.AutoGetRaceV4 do
+                        for _, terminal in pairs(workspace:GetDescendants()) do
+                            if terminal.Name == "Terminal" and terminal:FindFirstChild("Part") then
+                                TP(terminal.Part.CFrame)
+                                task.wait(1)
+                                remote:InvokeServer("TempleOfTime", "Hack")
+                                hacked = hacked + 1
+                                task.wait(2)
+                                break
+                            end
+                        end
+                        task.wait(1)
+                    end
+                end
+                
+                -- Completar trial
+                task.wait(2)
+                remote:InvokeServer("TempleOfTime", "Complete")
+                Notify("✅ Raça V4 obtida!")
+                _G.Settings.AutoGetRaceV4 = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO RAID SYSTEM
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoRaid and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Verificar se tem chip
+                local hasChip = false
+                local chipName = _G.Settings.SelectedRaidChip .. " Microchip"
+                
+                for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
+                    if item.Name == chipName then
+                        hasChip = true
+                        break
+                    end
+                end
+                
+                if not hasChip then
+                    Notify("⚠️ Você não tem " .. chipName .. "!")
+                    _G.Settings.AutoRaid = false
+                    return
+                end
+                
+                -- Ir para Mysterious Scientist
+                TP(CFrame.new(-6438, 250, -4498)) -- Raid entrance
+                task.wait(2)
+                
+                -- Iniciar raid
+                remote:InvokeServer("Raids", "Start", _G.Settings.SelectedRaidChip)
+                task.wait(5)
+                
+                -- Loop de raid
+                while _G.Settings.AutoRaid do
+                    -- Procurar próxima ilha do raid
+                    local raidIsland = nil
+                    for _, v in pairs(workspace:GetChildren()) do
+                        if v.Name == "Island" and v:FindFirstChild("RaidIsland") then
+                            raidIsland = v
+                            break
+                        end
+                    end
+                    
+                    if raidIsland then
+                        TP(raidIsland:GetModelCFrame())
+                        task.wait(1)
+                        
+                        -- Matar todos os mobs da ilha
+                        for _, mob in pairs(workspace.Enemies:GetChildren()) do
+                            if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 and mob:FindFirstChild("HumanoidRootPart") then
+                                repeat
+                                    task.wait()
+                                    EquipWeapon()
+                                    mob.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                                    LocalPlayer.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                                    _G.Settings.FastAttack = true
+                                until not mob.Parent or mob.Humanoid.Health <= 0 or not _G.Settings.AutoRaid
+                                _G.Settings.FastAttack = false
+                            end
+                        end
+                    else
+                        -- Raid completado
+                        Notify("✅ Raid completado!")
+                        break
+                    end
+                    
+                    task.wait(2)
+                end
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO DUNGEON
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoDungeon and Sea == 3 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Ir para Castle on the Sea
+                TP(CFrame.new(-5075, 314, -3155))
+                task.wait(2)
+                
+                -- Entrar no dungeon
+                remote:InvokeServer("DungeonEntrance")
+                task.wait(5)
+                
+                -- Completar dungeon
+                while _G.Settings.AutoDungeon do
+                    -- Matar todos os mobs do dungeon
+                    for _, mob in pairs(workspace.Enemies:GetChildren()) do
+                        if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 and mob:FindFirstChild("HumanoidRootPart") then
+                            repeat
+                                task.wait()
+                                EquipWeapon()
+                                mob.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                                _G.Settings.FastAttack = true
+                            until not mob.Parent or mob.Humanoid.Health <= 0 or not _G.Settings.AutoDungeon
+                            _G.Settings.FastAttack = false
+                        end
+                    end
+                    
+                    task.wait(2)
+                    
+                    -- Verificar se terminou
+                    if not workspace:FindFirstChild("DungeonActive") then
+                        Notify("✅ Dungeon completado!")
+                        break
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET TO SEA 2
+-- =========================
+task.spawn(function()
+    while task.wait(10) do
+        if _G.Settings.AutoGetToSea2 and Sea == 1 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Requisitos: Level 700+
+                if LocalPlayer.Data.Level.Value < 700 then
+                    Notify("⚠️ Precisa de Level 700+ para ir ao Sea 2!")
+                    return
+                end
+                
+                -- Ir para King Red Head (Pirate) ou Vice Admiral (Marine)
+                Notify("📌 Indo para o barco do Sea 2...")
+                
+                -- Verificar se é pirata ou marine
+                local playerSide = LocalPlayer.Team.Name
+                
+                if playerSide == "Pirates" then
+                    -- Teleportar para King Red Head
+                    TP(CFrame.new(-5058, 314, -3155))
+                    task.wait(2)
+                    remote:InvokeServer("TravelDressrosa")
+                else
+                    -- Teleportar para Vice Admiral
+                    TP(CFrame.new(-3000, 73, -3000))
+                    task.wait(2)
+                    remote:InvokeServer("TravelDressrosa")
+                end
+                
+                Notify("✅ Indo para o Sea 2!")
+                _G.Settings.AutoGetToSea2 = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO GET TO SEA 3
+-- =========================
+task.spawn(function()
+    while task.wait(10) do
+        if _G.Settings.AutoGetToSea3 and Sea == 2 then
+            pcall(function()
+                local remote = GetRemote()
+                if not remote then return end
+                
+                -- Requisitos: Level 1500+
+                if LocalPlayer.Data.Level.Value < 1500 then
+                    Notify("⚠️ Precisa de Level 1500+ para ir ao Sea 3!")
+                    return
+                end
+                
+                -- Ir para King Red Head (Pirate) ou Vice Admiral (Marine)
+                Notify("📌 Indo para o barco do Sea 3...")
+                
+                -- Verificar se é pirata ou marine
+                local playerSide = LocalPlayer.Team.Name
+                
+                if playerSide == "Pirates" then
+                    TP(CFrame.new(-5058, 314, -3155))
+                    task.wait(2)
+                    remote:InvokeServer("TravelZou")
+                else
+                    TP(CFrame.new(-3000, 73, -3000))
+                    task.wait(2)
+                    remote:InvokeServer("TravelZou")
+                end
+                
+                Notify("✅ Indo para o Sea 3!")
+                _G.Settings.AutoGetToSea3 = false
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- GUI PRINCIPAL
+-- =========================
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "LagTeckHub_" .. tick()
+Gui.ResetOnSpawn = false
+
+pcall(function()
+    for _, v in pairs(game:GetService("CoreGui"):GetChildren()) do
+        if v.Name:find("LagTeckHub") then
+            v:Destroy()
+        end
+    end
+end)
+
+local success = pcall(function()
+    Gui.Parent = game:GetService("CoreGui")
+end)
+
+if not success then
+    Gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- =========================
+-- BOLINHA (BOTÃO FLUTUANTE)
+-- =========================
+local Bubble = Instance.new("ImageButton", Gui)
+Bubble.Size = UDim2.fromOffset(50, 50)
+Bubble.Position = UDim2.new(0, 20, 0.5, -25)
+Bubble.Image = "rbxassetid://118708232212462"
+Bubble.BackgroundColor3 = Config.Tema.Botao
+Bubble.BorderSizePixel = 0
+Bubble.Active = true
+Bubble.Draggable = true
+Bubble.ZIndex = 999
+
+Instance.new("UICorner", Bubble).CornerRadius = UDim.new(1, 0)
+
+-- =========================
+-- PAINEL PRINCIPAL
+-- =========================
+local Main = Instance.new("Frame", Gui)
+Main.Size = UDim2.fromOffset(0, 0)
+Main.Position = UDim2.new(0.5, -250, 0.5, -275)
+Main.BackgroundColor3 = Config.Tema.Fundo
+Main.BackgroundTransparency = 0.1
+Main.BorderSizePixel = 0
+Main.Visible = false
+Main.ZIndex = 1000
+Main.Active = true
+
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+
+-- Fazer painel arrastável
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+Main.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = Main.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Main.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+-- =========================
+-- TOP BAR
+-- =========================
+local Top = Instance.new("Frame", Main)
+Top.Size = UDim2.new(1, 0, 0, 50)
+Top.BackgroundColor3 = Config.Tema.Secundario
+Top.BackgroundTransparency = 0.1
+Top.BorderSizePixel = 0
+
+Instance.new("UICorner", Top).CornerRadius = UDim.new(0, 12)
+
+local Title = Instance.new("TextLabel", Top)
+Title.Size = UDim2.new(1, -150, 1, -15)
+Title.Position = UDim2.fromOffset(10, 0)
+Title.Text = "Lag Teck Hub v2.0"
+Title.TextColor3 = Config.Tema.Texto
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 15
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.TextYAlignment = Enum.TextYAlignment.Top
+
+local DiscordLink = Instance.new("TextLabel", Top)
+DiscordLink.Size = UDim2.new(0, 150, 0, 12)
+DiscordLink.Position = UDim2.new(0, 10, 1, -15)
+DiscordLink.Text = "discord.gg/RnZ6XHHFj7"
+DiscordLink.TextColor3 = Color3.fromRGB(120, 120, 120)
+DiscordLink.BackgroundTransparency = 1
+DiscordLink.Font = Enum.Font.Gotham
+DiscordLink.TextSize = 8
+DiscordLink.TextXAlignment = Enum.TextXAlignment.Left
+
+local SeaLabel = Instance.new("TextLabel", Top)
+SeaLabel.Size = UDim2.fromOffset(65, 28)
+SeaLabel.Position = UDim2.new(1, -170, 0, 11)
+SeaLabel.Text = "SEA " .. Sea
+SeaLabel.TextColor3 = Color3.new(1, 1, 1)
+SeaLabel.BackgroundColor3 = Config.Tema.Ativo
+SeaLabel.Font = Enum.Font.GothamBold
+SeaLabel.TextSize = 12
+SeaLabel.BorderSizePixel = 0
+
+Instance.new("UICorner", SeaLabel).CornerRadius = UDim.new(0, 6)
+
+-- BOTÕES DE CONTROLE
+local MinBtn = Instance.new("TextButton", Top)
+MinBtn.Size = UDim2.fromOffset(28, 28)
+MinBtn.Position = UDim2.new(1, -98, 0, 11)
+MinBtn.Text = "−"
+MinBtn.TextSize = 18
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.TextColor3 = Color3.new(1, 1, 1)
+MinBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+MinBtn.BorderSizePixel = 0
+
+Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
+
+local MaxBtn = Instance.new("TextButton", Top)
+MaxBtn.Size = UDim2.fromOffset(28, 28)
+MaxBtn.Position = UDim2.new(1, -65, 0, 11)
+MaxBtn.Text = "+"
+MaxBtn.TextSize = 18
+MaxBtn.Font = Enum.Font.GothamBold
+MaxBtn.TextColor3 = Color3.new(1, 1, 1)
+MaxBtn.BackgroundColor3 = Color3.fromRGB(100, 150, 100)
+MaxBtn.BorderSizePixel = 0
+MaxBtn.Visible = false
+
+Instance.new("UICorner", MaxBtn).CornerRadius = UDim.new(0, 6)
+
+local CloseBtn = Instance.new("TextButton", Top)
+CloseBtn.Size = UDim2.fromOffset(28, 28)
+CloseBtn.Position = UDim2.new(1, -32, 0, 11)
+CloseBtn.Text = "✕"
+CloseBtn.TextSize = 14
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextColor3 = Color3.new(1, 1, 1)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseBtn.BorderSizePixel = 0
+
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+-- =========================
+-- BODY
+-- =========================
+local Body = Instance.new("Frame", Main)
+Body.Position = UDim2.fromOffset(0, 55)
+Body.Size = UDim2.new(1, 0, 1, -55)
+Body.BackgroundTransparency = 1
+
+-- =========================
+-- SEARCH BAR
+-- =========================
+local Search = Instance.new("TextBox", Body)
+Search.Size = UDim2.new(1, -20, 0, 35)
+Search.Position = UDim2.fromOffset(10, 5)
+Search.PlaceholderText = "🔍 Pesquisar..."
+Search.Text = ""
+Search.BackgroundColor3 = Config.Tema.Botao
+Search.BackgroundTransparency = 0.3
+Search.TextColor3 = Config.Tema.Texto
+Search.BorderSizePixel = 0
+Search.Font = Enum.Font.Gotham
+Search.TextSize = 12
+
+Instance.new("UICorner", Search).CornerRadius = UDim.new(0, 8)
+
+-- =========================
+-- TAB BAR (LISTA DE ABAS)
+-- =========================
+local TabBar = Instance.new("ScrollingFrame", Body)
+TabBar.Position = UDim2.fromOffset(10, 45)
+TabBar.Size = UDim2.new(0, 90, 1, -55)
+TabBar.BackgroundTransparency = 1
+TabBar.BorderSizePixel = 0
+TabBar.ScrollBarThickness = 3
+TabBar.CanvasSize = UDim2.fromOffset(0, 0)
+
+local TabLayout = Instance.new("UIListLayout", TabBar)
+TabLayout.Padding = UDim.new(0, 4)
+
+TabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    TabBar.CanvasSize = UDim2.fromOffset(0, TabLayout.AbsoluteContentSize.Y + 10)
+end)
+
+-- =========================
+-- CONTENT (ÁREA DAS ABAS)
+-- =========================
+local Content = Instance.new("Frame", Body)
+Content.Position = UDim2.fromOffset(110, 45)
+Content.Size = UDim2.new(1, -120, 1, -55)
+Content.BackgroundTransparency = 1
+
+local Tabs = {}
+local SelectedOptions = {}
+
+-- =========================
+-- FUNÇÕES DE COMPONENTES GUI
+-- =========================
+local function CriarAba(nome)
+    local Btn = Instance.new("TextButton", TabBar)
+    Btn.Size = UDim2.new(1, 0, 0, 35)
+    Btn.Text = nome
+    Btn.BackgroundColor3 = Config.Tema.Botao
+    Btn.BackgroundTransparency = 0.3
+    Btn.TextColor3 = Config.Tema.Texto
+    Btn.BorderSizePixel = 0
+    Btn.Font = Enum.Font.Gotham
+    Btn.TextSize = 9
+    Btn.AutoButtonColor = false
+
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
+
+    local Frame = Instance.new("ScrollingFrame", Content)
+    Frame.Size = UDim2.fromScale(1, 1)
+    Frame.CanvasSize = UDim2.fromScale(0, 0)
+    Frame.ScrollBarThickness = 4
+    Frame.ScrollBarImageColor3 = Config.Tema.Ativo
+    Frame.Visible = false
+    Frame.BackgroundTransparency = 1
+    Frame.BorderSizePixel = 0
+
+    local Layout = Instance.new("UIListLayout", Frame)
+    Layout.Padding = UDim.new(0, 5)
+    
+    Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Frame.CanvasSize = UDim2.fromOffset(0, Layout.AbsoluteContentSize.Y + 10)
+    end)
+
+    Btn.MouseButton1Click:Connect(function()
+        for _, v in pairs(Tabs) do
+            v.Frame.Visible = false
+            Tween(v.Btn, 0.2, {BackgroundColor3 = Config.Tema.Botao})
+        end
+        Frame.Visible = true
+        Tween(Btn, 0.2, {BackgroundColor3 = Config.Tema.Ativo})
+    end)
+
+    Tabs[nome] = {Frame = Frame, Btn = Btn}
+    return Frame
+end
+
+local SelectedFrame
+
+local function AddToSelected(name, settingKey)
+    if SelectedFrame and not SelectedOptions[name] then
+        local Box = Instance.new("Frame", SelectedFrame)
+        Box.Size = UDim2.new(1, 0, 0, 40)
+        Box.BackgroundColor3 = Config.Tema.Ativo
+        Box.BackgroundTransparency = 0.5
+        Box.BorderSizePixel = 0
+        
+        Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
+        
+        local Label = Instance.new("TextLabel", Box)
+        Label.Size = UDim2.new(1, -10, 1, 0)
+        Label.Position = UDim2.fromOffset(5, 0)
+        Label.Text = "✓ " .. name
+        Label.TextColor3 = Color3.new(1, 1, 1)
+        Label.BackgroundTransparency = 1
+        Label.Font = Enum.Font.GothamBold
+        Label.TextSize = 10
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.TextWrapped = true
+        
+        SelectedOptions[name] = {Box = Box, SettingKey = settingKey}
+    end
+end
+
+local function RemoveFromSelected(name)
+    if SelectedOptions[name] then
+        SelectedOptions[name].Box:Destroy()
+        SelectedOptions[name] = nil
+    end
+end
+
+local function Toggle(parent, texto, callback, settingKey)
+    local Box = Instance.new("Frame", parent)
+    Box.Size = UDim2.new(1, 0, 0, 45)
+    Box.BackgroundColor3 = Config.Tema.Botao
+    Box.BackgroundTransparency = 0.3
+    Box.BorderSizePixel = 0
+    
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
+
+    local Label = Instance.new("TextLabel", Box)
+    Label.Size = UDim2.new(1, -60, 1, 0)
+    Label.Position = UDim2.fromOffset(8, 0)
+    Label.Text = texto
+    Label.BackgroundTransparency = 1
+    Label.TextColor3 = Config.Tema.Texto
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 10
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextWrapped = true
+
+    local Btn = Instance.new("TextButton", Box)
+    Btn.Size = UDim2.fromOffset(40, 20)
+    Btn.Position = UDim2.new(1, -45, 0.5, -10)
+    Btn.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
+    Btn.Text = ""
+    Btn.BorderSizePixel = 0
+    Btn.AutoButtonColor = false
+    
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(1, 0)
+    
+    local Circle = Instance.new("Frame", Btn)
+    Circle.Size = UDim2.fromOffset(16, 16)
+    Circle.Position = UDim2.fromOffset(2, 2)
+    Circle.BackgroundColor3 = Color3.new(1, 1, 1)
+    Circle.BorderSizePixel = 0
+    
+    Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
+    
+    local enabled = false
+    
+    -- Carregar estado salvo
+    if settingKey and _G.Settings[settingKey] then
+        enabled = true
+        Circle.Position = UDim2.fromOffset(22, 2)
+        Btn.BackgroundColor3 = Config.Tema.Ativo
+        AddToSelected(texto, settingKey)
+    end
+    
+    Btn.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        
+        if enabled then
+            Tween(Circle, 0.2, {Position = UDim2.fromOffset(22, 2)})
+            Tween(Btn, 0.2, {BackgroundColor3 = Config.Tema.Ativo})
+            Notify("✅ " .. texto .. " ATIVADO!")
+            if settingKey then
+                AddToSelected(texto, settingKey)
+            end
+        else
+            Tween(Circle, 0.2, {Position = UDim2.fromOffset(2, 2)})
+            Tween(Btn, 0.2, {BackgroundColor3 = Color3.fromRGB(120, 120, 120)})
+            Notify("❌ " .. texto .. " DESATIVADO!")
+            if settingKey then
+                RemoveFromSelected(texto)
+            end
+        end
+        
+        if callback then
+            task.spawn(function() callback(enabled) end)
+        end
+        
+        SaveConfig()
+    end)
+end
+
+local function Dropdown(parent, texto, options, callback, settingKey)
+    local Box = Instance.new("Frame", parent)
+    Box.Size = UDim2.new(1, 0, 0, 45)
+    Box.BackgroundColor3 = Config.Tema.Botao
+    Box.BackgroundTransparency = 0.3
+    Box.BorderSizePixel = 0
+    
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
+
+    local Label = Instance.new("TextLabel", Box)
+    Label.Size = UDim2.new(0.4, 0, 1, 0)
+    Label.Position = UDim2.fromOffset(8, 0)
+    Label.Text = texto
+    Label.BackgroundTransparency = 1
+    Label.TextColor3 = Config.Tema.Texto
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 9
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextWrapped = true
+
+    local Btn = Instance.new("TextButton", Box)
+    Btn.Size = UDim2.new(0.55, 0, 0, 32)
+    Btn.Position = UDim2.new(0.43, 0, 0.5, -16)
+    Btn.Text = settingKey and _G.Settings[settingKey] or options[1] or "..."
+    Btn.BackgroundColor3 = Config.Tema.Secundario
+    Btn.BackgroundTransparency = 0.2
+    Btn.TextColor3 = Config.Tema.Texto
+    Btn.Font = Enum.Font.Gotham
+    Btn.TextSize = 8
+    Btn.BorderSizePixel = 0
+    Btn.TextTruncate = Enum.TextTruncate.AtEnd
+    
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 5)
+    
+    local DropScroll = Instance.new("ScrollingFrame", Gui)
+    DropScroll.Size = UDim2.new(0, 180, 0, 0)
+    DropScroll.Position = UDim2.new(0.5, 0, 0.5, 0)
+    DropScroll.BackgroundColor3 = Config.Tema.Secundario
+    DropScroll.BorderSizePixel = 0
+    DropScroll.Visible = false
+    DropScroll.ZIndex = 10000
+    DropScroll.ScrollBarThickness = 3
+    DropScroll.CanvasSize = UDim2.fromOffset(0, #options * 35)
+    
+    Instance.new("UICorner", DropScroll).CornerRadius = UDim.new(0, 5)
+    
+    local DropLayout = Instance.new("UIListLayout", DropScroll)
+    DropLayout.Padding = UDim.new(0, 2)
+    
+    local isOpen = false
+    
+    Btn.MouseButton1Click:Connect(function()
+        isOpen = not isOpen
+        DropScroll.Visible = isOpen
+        
+        if isOpen then
+            local btnPos = Btn.AbsolutePosition
+            DropScroll.Position = UDim2.fromOffset(btnPos.X, btnPos.Y + 37)
+            DropScroll.Size = UDim2.new(0, 180, 0, math.min(#options * 35, 220))
+        end
+    end)
+    
+    for _, option in pairs(options) do
+        local OptBtn = Instance.new("TextButton", DropScroll)
+        OptBtn.Size = UDim2.new(1, 0, 0, 33)
+        OptBtn.Text = option
+        OptBtn.BackgroundColor3 = Config.Tema.Botao
+        OptBtn.TextColor3 = Config.Tema.Texto
+        OptBtn.Font = Enum.Font.Gotham
+        OptBtn.TextSize = 8
+        OptBtn.BorderSizePixel = 0
+        OptBtn.TextTruncate = Enum.TextTruncate.AtEnd
+        
+        OptBtn.MouseButton1Click:Connect(function()
+            Btn.Text = option
+            DropScroll.Visible = false
+            isOpen = false
+            Notify("✅ " .. texto .. ": " .. option)
+            if callback then
+                task.spawn(function() callback(option) end)
+            end
+            SaveConfig()
+        end)
+    end
+    
+    return {Dropdown = DropScroll, Button = Btn}
+end
+
+local function Button(parent, texto, callback)
+    local Btn = Instance.new("TextButton", parent)
+    Btn.Size = UDim2.new(1, 0, 0, 45)
+    Btn.Text = texto
+    Btn.BackgroundColor3 = Config.Tema.Ativo
+    Btn.BackgroundTransparency = 0.3
+    Btn.TextColor3 = Config.Tema.Texto
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 11
+    Btn.BorderSizePixel = 0
+    
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
+    
+    Btn.MouseButton1Click:Connect(function()
+        if callback then
+            task.spawn(function() callback() end)
+        end
+    end)
+end
+
+local function Section(parent, texto)
+    local Box = Instance.new("Frame", parent)
+    Box.Size = UDim2.new(1, 0, 0, 32)
+    Box.BackgroundColor3 = Config.Tema.AzulClaro
+    Box.BackgroundTransparency = 0.5
+    Box.BorderSizePixel = 0
+    
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
+
+    local Label = Instance.new("TextLabel", Box)
+    Label.Size = UDim2.new(1, 0, 1, 0)
+    Label.Text = "⚙️ " .. texto
+    Label.BackgroundTransparency = 1
+    Label.TextColor3 = Color3.new(1, 1, 1)
+    Label.Font = Enum.Font.GothamBold
+    Label.TextSize = 11
+    Label.TextXAlignment = Enum.TextXAlignment.Center
+end
+
+local function InfoBox(parent, title, value, color)
+    local Box = Instance.new("Frame", parent)
+    Box.Size = UDim2.new(1, 0, 0, 55)
+    Box.BackgroundColor3 = Config.Tema.Botao
+    Box.BackgroundTransparency = 0.3
+    Box.BorderSizePixel = 0
+    
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 8)
+    
+    local Title = Instance.new("TextLabel", Box)
+    Title.Size = UDim2.new(1, -15, 0.4, 0)
+    Title.Position = UDim2.fromOffset(8, 4)
+    Title.Text = title
+    Title.BackgroundTransparency = 1
+    Title.TextColor3 = Color3.fromRGB(150, 150, 150)
+    Title.Font = Enum.Font.Gotham
+    Title.TextSize = 9
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local Value = Instance.new("TextLabel", Box)
+    Value.Size = UDim2.new(1, -15, 0.5, 0)
+    Value.Position = UDim2.new(0, 8, 0.5, 0)
+    Value.Text = value
+    Value.BackgroundTransparency = 1
+    Value.TextColor3 = color or Config.Tema.Texto
+    Value.Font = Enum.Font.GothamBold
+    Value.TextSize = 14
+    Value.TextXAlignment = Enum.TextXAlignment.Left
+    
+    return {Box = Box, ValueLabel = Value}
+end
+
+local function StatusIndicator(parent, title, isActive, requiresSea3)
+    local Box = Instance.new("Frame", parent)
+    Box.Size = UDim2.new(0.48, 0, 0, 40)
+    Box.BackgroundColor3 = Config.Tema.Botao
+    Box.BackgroundTransparency = 0.3
+    Box.BorderSizePixel = 0
+    
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
+    
+    local Indicator = Instance.new("Frame", Box)
+    Indicator.Size = UDim2.fromOffset(10, 10)
+    Indicator.Position = UDim2.fromOffset(8, 15)
+    Indicator.BackgroundColor3 = isActive and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+    Indicator.BorderSizePixel = 0
+    
+    Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
+    
+    local Label = Instance.new("TextLabel", Box)
+    Label.Size = UDim2.new(1, -25, 1, 0)
+    Label.Position = UDim2.fromOffset(23, 0)
+    Label.Text = title
+    Label.BackgroundTransparency = 1
+    Label.TextColor3 = Config.Tema.Texto
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 9
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextWrapped = true
+    
+    if requiresSea3 and Sea ~= 3 then
+        Label.Text = title .. "\n⚠️ SEA 3 APENAS"
+        Label.TextColor3 = Color3.fromRGB(255, 150, 0)
+        Indicator.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    end
+    
+    return {Box = Box, Indicator = Indicator, Label = Label}
+end
+
+-- =========================
+-- CRIANDO TODAS AS ABAS
+-- =========================
+local HomeTab = CriarAba("🏠 Home")
+local SelectedTab = CriarAba("✓ Ativos")
+local FarmTab = CriarAba("🌾 Farm")
+local BossTab = CriarAba("👹 Boss")
+local FruitTab = CriarAba("🍎 Frutas")
+local CDKTab = CriarAba("⚔️ CDK/TTK")
+local FightingTab = CriarAba("🥋 Estilos")
+local RaceTab = CriarAba("🧬 Raças")
+local RaidTab = CriarAba("🏆 Raids")
+local TeleportTab = CriarAba("🗺️ TP")
+local SeaEventTab = CriarAba("🌊 Eventos")
+local ESPTab = CriarAba("👁️ ESP")
+local ConfigTab = CriarAba("⚙️ Config")
+local PVPTab = CriarAba("⚔️ PVP")
+local MiscTab = CriarAba("📦 Misc")
+
+SelectedFrame = SelectedTab
+
+-- Ativar primeira aba
+for _, v in pairs(Tabs) do
+    v.Frame.Visible = false
+    Tween(v.Btn, 0.2, {BackgroundColor3 = Config.Tema.Botao})
+end
+Tabs["🏠 Home"].Frame.Visible = true
+Tween(Tabs["🏠 Home"].Btn, 0.2, {BackgroundColor3 = Config.Tema.Ativo})
+
+-- =========================
+-- ABA HOME
+-- =========================
+Button(HomeTab, "🎮 Entrar no Discord", function()
+    local url = "https://discord.gg/RnZ6XHHFj7"
+    pcall(function()
+        setclipboard(url)
+    end)
+    Notify("✅ Link copiado: " .. url)
+end)
+
+Section(HomeTab, "Perfil do Jogador")
+
+local PlayerNameBox = InfoBox(HomeTab, "👤 Nome", LocalPlayer.Name, Color3.fromRGB(100, 200, 255))
+local LevelBox = InfoBox(HomeTab, "⭐ Level", tostring(LocalPlayer.Data.Level.Value), Color3.fromRGB(255, 215, 0))
+local MoneyBox = InfoBox(HomeTab, "💰 Beli", "...", Color3.fromRGB(255, 215, 0))
+local FragBox = InfoBox(HomeTab, "💎 Fragmentos", "...", Color3.fromRGB(100, 200, 255))
+
+-- Atualizar info do player
+task.spawn(function()
+    while task.wait(5) do
+        pcall(function()
+            LevelBox.ValueLabel.Text = tostring(LocalPlayer.Data.Level.Value)
+            MoneyBox.ValueLabel.Text = "$" .. FormatNumber(LocalPlayer.Data.Beli.Value)
+            FragBox.ValueLabel.Text = FormatNumber(LocalPlayer.Data.Fragments.Value)
+        end)
+    end
+end)
+
+Section(HomeTab, "Status de Eventos")
+
+local StatusGrid = Instance.new("Frame", HomeTab)
+StatusGrid.Size = UDim2.new(1, 0, 0, 90)
+StatusGrid.BackgroundTransparency = 1
+
+local GridLayout = Instance.new("UIGridLayout", StatusGrid)
+GridLayout.CellSize = UDim2.new(0.48, 0, 0, 40)
+GridLayout.CellPadding = UDim2.new(0.04, 0, 0, 8)
+
+local LeviathanStatus = StatusIndicator(StatusGrid, "🐉 Leviathan", false, true)
+local MirageStatus = StatusIndicator(StatusGrid, "🏝️ Miragem", false, true)
+local VolcanoStatus = StatusIndicator(StatusGrid, "🌋 Vulcão", false, true)
+local FullMoonStatus = StatusIndicator(StatusGrid, "🌕 Lua Cheia", false, false)
+
+-- Atualizar status dos eventos
+task.spawn(function()
+    while task.wait(30) do
+        if Sea == 3 then
+            pcall(function()
+                -- Leviathan
+                local leviathanSpawned = workspace:FindFirstChild("Leviathan") ~= nil
+                LeviathanStatus.Indicator.BackgroundColor3 = leviathanSpawned and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+                
+                -- Mirage
+                local mirageSpawned = false
+                for _, v in pairs(workspace:GetChildren()) do
+                    if v.Name == "MysticIsland" then
+                        mirageSpawned = true
+                        break
+                    end
+                end
+                MirageStatus.Indicator.BackgroundColor3 = mirageSpawned and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+                
+                -- Vulcão
+                local volcanoSpawned = false
+                for _, v in pairs(workspace:GetChildren()) do
+                    if v.Name:find("Volcano") then
+                        volcanoSpawned = true
+                        break
+                    end
+                end
+                VolcanoStatus.Indicator.BackgroundColor3 = volcanoSpawned and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+                
+                -- Lua Cheia
+                local isFullMoon = Lighting.ClockTime >= 18 or Lighting.ClockTime <= 6
+                FullMoonStatus.Indicator.BackgroundColor3 = isFullMoon and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- ABA ATIVOS
+-- =========================
+local NoSelectedLabel = Instance.new("TextLabel", SelectedTab)
+NoSelectedLabel.Size = UDim2.new(1, 0, 1, 0)
+NoSelectedLabel.Text = "Nenhuma opção ativa.\n\nAtive funcionalidades nas outras abas\npara vê-las aqui!"
+NoSelectedLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+NoSelectedLabel.BackgroundTransparency = 1
+NoSelectedLabel.Font = Enum.Font.Gotham
+NoSelectedLabel.TextSize = 11
+NoSelectedLabel.TextWrapped = true
+
+-- =========================
+-- ABA FARM
+-- =========================
+Section(FarmTab, "Configuração de Farm")
+
+Dropdown(FarmTab, "Tipo de Arma", {"Nenhum", "Estilo de Luta", "Espada", "Arma", "Fruta"}, function(v)
+    _G.Settings.WeaponType = v
+end, "WeaponType")
+
+Dropdown(FarmTab, "Distância", {"20", "30", "40", "50"}, function(v)
+    _G.Settings.FarmDistance = tonumber(v)
+end, "FarmDistance")
+
+Toggle(FarmTab, "Bring Mobs", function(v)
+    _G.Settings.BringMobs = v
+end, "BringMobs")
+
+Section(FarmTab, "Auto Farm")
+
+Toggle(FarmTab, "Auto Farm Level", function(v)
+    if v and _G.Settings.WeaponType == "Nenhum" then
+        Notify("⚠️ Selecione uma arma primeiro!")
+        return
+    end
+    _G.Settings.AutoFarmLevel = v
+end, "AutoFarmLevel")
+
+Toggle(FarmTab, "Auto Chest", function(v)
+    _G.Settings.AutoChest = v
+end, "AutoChest")
+
+Toggle(FarmTab, "Fast Attack", function(v)
+    _G.Settings.FastAttack = v
+end, "FastAttack")
+
+Toggle(FarmTab, "Auto Buso Haki", function(v)
+    _G.Settings.AutoHaki = v
+end, "AutoHaki")
+
+Section(FarmTab, "Mastery Farm")
+
+Toggle(FarmTab, "Farm Mastery Fruta", function(v)
+    _G.Settings.FarmFruitMastery = v
+end, "FarmFruitMastery")
+
+Toggle(FarmTab, "Farm Mastery Arma", function(v)
+    _G.Settings.FarmWeaponMastery = v
+end, "FarmWeaponMastery")
+
+-- =========================
+-- ABA BOSS
+-- =========================
+Section(BossTab, "Auto Farm Boss")
+
+Toggle(BossTab, "Auto Farm Boss", function(v)
+    _G.Settings.AutoFarmBoss = v
+end, "AutoFarmBoss")
+
+local function GetSpawnedBosses()
+    local spawned = {"All"}
+    pcall(function()
+        for _, boss in pairs(workspace.Enemies:GetChildren()) do
+            if boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+                for _, bossName in pairs(BossList) do
+                    if boss.Name == bossName and not table.find(spawned, boss.Name) then
+                        table.insert(spawned, boss.Name)
+                        break
+                    end
+                end
+            end
+        end
+    end)
+    return spawned
+end
+
+local bossDropdown = Dropdown(BossTab, "Boss Selecionado", GetSpawnedBosses(), function(v)
+    _G.Settings.SelectedBoss = v
+end, "SelectedBoss")
+
+-- Atualizar lista de bosses spawnados
+task.spawn(function()
+    while task.wait(10) do
+        pcall(function()
+            local spawnedBosses = GetSpawnedBosses()
+            for _, child in pairs(bossDropdown.Dropdown:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child:Destroy()
+                end
+            end
+            for _, boss in pairs(spawnedBosses) do
+                local OptBtn = Instance.new("TextButton", bossDropdown.Dropdown)
+                OptBtn.Size = UDim2.new(1, 0, 0, 33)
+                OptBtn.Text = boss
+                OptBtn.BackgroundColor3 = Config.Tema.Botao
+                OptBtn.TextColor3 = Config.Tema.Texto
+                OptBtn.Font = Enum.Font.Gotham
+                OptBtn.TextSize = 8
+                OptBtn.BorderSizePixel = 0
+                OptBtn.MouseButton1Click:Connect(function()
+                    bossDropdown.Button.Text = boss
+                    bossDropdown.Dropdown.Visible = false
+                    _G.Settings.SelectedBoss = boss
+                    SaveConfig()
+                end)
+            end
+            bossDropdown.Dropdown.CanvasSize = UDim2.fromOffset(0, #spawnedBosses * 35)
+        end)
+    end
+end)
+
+Section(BossTab, "Bosses Específicos")
+
+if Sea == 2 then
+    Toggle(BossTab, "Auto Katakuri (500 Donuts)", function(v)
+        _G.Settings.AutoKatakuri = v
+    end, "AutoKatakuri")
+end
+
+if Sea == 3 then
+    Toggle(BossTab, "Auto Dough King", function(v)
+        _G.Settings.AutoDoughKing = v
+    end, "AutoDoughKing")
+end
+
+-- =========================
+-- ABA FRUTAS
+-- =========================
+Section(FruitTab, "Auto Frutas")
+
+Toggle(FruitTab, "Auto Random Fruit", function(v)
+    _G.Settings.AutoRandomFruit = v
+end, "AutoRandomFruit")
+
+Toggle(FruitTab, "Fruit Sniper", function(v)
+    _G.Settings.AutoFruitSniper = v
+end, "AutoFruitSniper")
+
+Toggle(FruitTab, "Auto Guardar Fruta", function(v)
+    _G.Settings.AutoStoreFruit = v
+end, "AutoStoreFruit")
+
+Section(FruitTab, "Comprar Frutas")
+
+Toggle(FruitTab, "Auto Comprar Fruta", function(v)
+    _G.Settings.AutoBuyFruit = v
+end, "AutoBuyFruit")
+
+Dropdown(FruitTab, "Fruta Selecionada", FruitList, function(v)
+    _G.Settings.SelectedFruit = v
+end, "SelectedFruit")
+
+Section(FruitTab, "Loja de Frutas")
+
+Button(FruitTab, "📊 Ver Loja Normal", function()
+    task.spawn(function()
+        local remote = GetRemote()
+        if not remote then 
+            Notify("❌ Remote não encontrado!")
+            return 
+        end
+        print("=== LOJA NORMAL ===")
+        local success, result = pcall(function()
+            return remote:InvokeServer("GetFruits")
+        end)
+        if success and result and type(result) == "table" then
+            for _, fruit in pairs(result) do
+                if type(fruit) == "table" and fruit.Name and fruit.Price then
+                    print(string.format("🍎 %s - $%s", fruit.Name, FormatNumber(fruit.Price)))
+                end
+            end
+            Notify("✅ Confira o console (F9)")
+        else
+            Notify("⚠️ Erro ao consultar loja")
+        end
+    end)
+end)
+
+Button(FruitTab, "🌀 Ver Loja Miragem", function()
+    task.spawn(function()
+        local remote = GetRemote()
+        if not remote then
+            Notify("❌ Remote não encontrado!")
+            return
+        end
+        print("=== LOJA MIRAGEM ===")
+        local success, result = pcall(function()
+            return remote:InvokeServer("GetFruits", true)
+        end)
+        if success and type(result) == "table" then
+            for _, fruit in pairs(result) do
+                if type(fruit) == "table" and fruit.Name and fruit.Price then
+                    print(string.format("🌟 %s - %s fragmentos", fruit.Name, FormatNumber(fruit.Price)))
+                end
+            end
+            Notify("✅ Confira o console (F9)")
+        else
+            Notify("✅ Loja verificada!")
+        end
+    end)
+end)
+
+-- =========================
+-- ABA CDK/TTK
+-- =========================
+Section(CDKTab, "Armas Lendárias")
+
+Toggle(CDKTab, "Auto Get CDK", function(v)
+    if Sea ~= 3 then
+        Notify("⚠️ CDK só está disponível no Sea 3!")
+        return
+    end
+    _G.Settings.AutoGetCDK = v
+end, "AutoGetCDK")
+
+Toggle(CDKTab, "Auto Get Soul Guitar", function(v)
+    if Sea ~= 3 then
+        Notify("⚠️ Soul Guitar só está disponível no Sea 3!")
+        return
+    end
+    _G.Settings.AutoGetSoulGuitar = v
+end, "AutoGetSoulGuitar")
+
+Toggle(CDKTab, "Auto Get TTK (Triple Katana)", function(v)
+    if Sea ~= 3 then
+        Notify("⚠️ TTK só está disponível no Sea 3!")
+        return
+    end
+    _G.Settings.AutoGetTTK = v
+end, "AutoGetTTK")
+
+Section(CDKTab, "Informações")
+
+local InfoLabel = Instance.new("TextLabel", CDKTab)
+InfoLabel.Size = UDim2.new(1, 0, 0, 150)
+InfoLabel.Text = "📌 CDK - Cursed Dual Katana\nRequer: Tushita + Yama\n\n📌 Soul Guitar\nRequer: Fragmentos + Soul Reaper\n\n📌 TTK - Triple Katana\nRequer: Level 1800+ e 3 espadas\ncom 300+ Mastery"
+InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+InfoLabel.BackgroundColor3 = Config.Tema.Botao
+InfoLabel.BackgroundTransparency = 0.5
+InfoLabel.Font = Enum.Font.Gotham
+InfoLabel.TextSize = 9
+InfoLabel.TextWrapped = true
+InfoLabel.TextYAlignment = Enum.TextYAlignment.Top
+
+Instance.new("UICorner", InfoLabel).CornerRadius = UDim.new(0, 6)
+
+-- =========================
+-- ABA ESTILOS DE LUTA
+-- =========================
+Section(FightingTab, "Estilos V1")
+
+Toggle(FightingTab, "Auto Get Dark Step", function(v)
+    _G.Settings.AutoGetDarkStep = v
+end, "AutoGetDarkStep")
+
+Toggle(FightingTab, "Auto Get Electric", function(v)
+    _G.Settings.AutoGetElectric = v
+end, "AutoGetElectric")
+
+Toggle(FightingTab, "Auto Get Water Kung Fu", function(v)
+    _G.Settings.AutoGetWaterKungFu = v
+end, "AutoGetWaterKungFu")
+
+Toggle(FightingTab, "Auto Get Dragon Breath", function(v)
+    _G.Settings.AutoGetDragonBreath = v
+end, "AutoGetDragonBreath")
+
+Toggle(FightingTab, "Auto Get Superhuman", function(v)
+    _G.Settings.AutoGetSuperhuman = v
+end, "AutoGetSuperhuman")
+
+Section(FightingTab, "Estilos V2 (Sea 3)")
+
+Toggle(FightingTab, "Auto Get Death Step", function(v)
+    if Sea ~= 3 then
+        Notify("⚠️ Death Step só no Sea 3!")
+        return
+    end
+    _G.Settings.AutoGetDeathStep = v
+end, "AutoGetDeathStep")
+
+Toggle(FightingTab, "Auto Get Sharkman Karate", function(v)
+    if Sea ~= 3 then
+        Notify("⚠️ Sharkman Karate só no Sea 3!")
+        return
+    end
+    _G.Settings.AutoGetSharkmanKarate = v
+end, "AutoGetSharkmanKarate")
+
+Toggle(FightingTab, "Auto Get Dragon Talon", function(v)
+    if Sea ~= 3 then
+        Notify("⚠️ Dragon Talon só no Sea 3!")
+        return
+    end
+    _G.Settings.AutoGetDragonTalon = v
+end, "AutoGetDragonTalon")
+
+Toggle(FightingTab, "Auto Get Electric Claw", function(v)
+    if Sea ~= 3 then
+        Notify("⚠️ Electric Claw só no Sea 3!")
+        return
+    end
+    _G.Settings.AutoGetElectricClaw = v
+end, "AutoGetElectricClaw")
+
+Section(FightingTab, "Estilos V3 (Sea 3)")
+
+Toggle(FightingTab, "Auto Get Godhuman", function(v)
+    if Sea ~= 3 then
+        Notify("⚠️ Godhuman só no Sea 3!")
+        return
+    end
+    _G.Settings.AutoGetGodhuman = v
+end, "AutoGetGodhuman")
+
+Toggle(FightingTab, "Auto Get Sanguine Art", function(v)
+    if Sea ~= 3 then
+        Notify("⚠️ Sanguine Art só no Sea 3!")
+        return
+    end
+    _G.Settings.AutoGetSanguineArt = v
+end, "AutoGetSanguineArt")
+
+-- =========================
+-- ABA RAÇAS
+-- =========================
+Section(RaceTab, "Evoluir Raça")
+
+if Sea == 2 then
+    Toggle(RaceTab, "Auto Get Raça V2", function(v)
+        _G.Settings.AutoGetRaceV2 = v
+    end, "AutoGetRaceV2")
+end
+
+if Sea == 3 then
+    Toggle(RaceTab, "Auto Get Raça V3", function(v)
+        _G.Settings.AutoGetRaceV3 = v
+    end, "AutoGetRaceV3")
+    
+    Toggle(RaceTab, "Auto Get Raça V4", function(v)
+        _G.Settings.AutoGetRaceV4 = v
+    end, "AutoGetRaceV4")
+end
+
+Section(RaceTab, "Informações")
+
+local RaceInfoLabel = Instance.new("TextLabel", RaceTab)
+RaceInfoLabel.Size = UDim2.new(1, 0, 0, 200)
+RaceInfoLabel.Text = "🧬 SUA RAÇA: " .. (LocalPlayer.Data.Race.Value or "N/A") .. "\n\n📌 V2 (Sea 2)\nRequer: Level 1000+, $3M\n\n📌 V3 (Sea 3)\nRequer: Level 1500+, V2, Quest\n\n📌 V4 (Sea 3)\nRequer: Level 2000+, V3\nTemple of Time Trial"
+RaceInfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+RaceInfoLabel.BackgroundColor3 = Config.Tema.Botao
+RaceInfoLabel.BackgroundTransparency = 0.5
+RaceInfoLabel.Font = Enum.Font.Gotham
+RaceInfoLabel.TextSize = 9
+RaceInfoLabel.TextWrapped = true
+RaceInfoLabel.TextYAlignment = Enum.TextYAlignment.Top
+
+Instance.new("UICorner", RaceInfoLabel).CornerRadius = UDim.new(0, 6)
+
+-- =========================
+-- ABA RAIDS
+-- =========================
+Section(RaidTab, "Auto Raid")
+
+Toggle(RaidTab, "Auto Start Raid", function(v)
+    if Sea ~= 3 then
+        Notify("⚠️ Raids só no Sea 3!")
+        return
+    end
+    _G.Settings.AutoRaid = v
+end, "AutoRaid")
+
+Dropdown(RaidTab, "Chip de Raid", RaidChips, function(v)
+    _G.Settings.SelectedRaidChip = v
+end, "SelectedRaidChip")
+
+Section(RaidTab, "Dungeon")
+
+Toggle(RaidTab, "Auto Complete Dungeon", function(v)
+    if Sea ~= 3 then
+        Notify("⚠️ Dungeon só no Sea 3!")
+        return
+    end
+    _G.Settings.AutoDungeon = v
+end, "AutoDungeon")
+
+Section(RaidTab, "Awakening")
+
+Button(RaidTab, "🔥 Despertar Fruta", function()
+    local remote = GetRemote()
+    if remote then
+        remote:InvokeServer("Awakening", "Check")
+        Notify("✅ Confira suas habilidades!")
+    end
+end)
+
+-- =========================
+-- ABA TELEPORT
+-- =========================
+Section(TeleportTab, "Mudar de Sea")
+
+local SeaFrame = Instance.new("Frame", TeleportTab)
+SeaFrame.Size = UDim2.new(1, 0, 0, 50)
+SeaFrame.BackgroundTransparency = 1
+
+local SeaLayout = Instance.new("UIListLayout", SeaFrame)
+SeaLayout.FillDirection = Enum.FillDirection.Horizontal
+SeaLayout.Padding = UDim.new(0, 4)
+SeaLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+for i = 1, 3 do
+    local SeaBtn = Instance.new("TextButton", SeaFrame)
+    SeaBtn.Size = UDim2.new(0.3, 0, 0, 45)
+    SeaBtn.Text = "SEA " .. i
+    SeaBtn.BackgroundColor3 = Sea == i and Config.Tema.Ativo or Config.Tema.Botao
+    SeaBtn.BackgroundTransparency = 0.3
+    SeaBtn.TextColor3 = Color3.new(1, 1, 1)
+    SeaBtn.Font = Enum.Font.GothamBold
+    SeaBtn.TextSize = 11
+    SeaBtn.BorderSizePixel = 0
+    Instance.new("UICorner", SeaBtn).CornerRadius = UDim.new(0, 6)
+    SeaBtn.MouseButton1Click:Connect(function()
+        TeleportToSea(i)
+    end)
+end
+
+Section(TeleportTab, "Teleportar para Ilha")
+
+Dropdown(TeleportTab, "Ilha", CurrentIslands, function(v)
+    _G.Settings.SelectedIsland = v
+end, "SelectedIsland")
+
+Button(TeleportTab, "🚀 Teleportar", function()
+    if _G.Settings.SelectedIsland and IslandPositions[_G.Settings.SelectedIsland] then
+        TP(IslandPositions[_G.Settings.SelectedIsland])
+        Notify("✅ TP: " .. _G.Settings.SelectedIsland)
+    else
+        Notify("⚠️ Selecione uma ilha!")
+    end
+end)
+
+Section(TeleportTab, "Missões de Sea")
+
+if Sea == 1 then
+    Toggle(TeleportTab, "Auto Go to Sea 2", function(v)
+        _G.Settings.AutoGetToSea2 = v
+    end, "AutoGetToSea2")
+elseif Sea == 2 then
+    Toggle(TeleportTab, "Auto Go to Sea 3", function(v)
+        _G.Settings.AutoGetToSea3 = v
+    end, "AutoGetToSea3")
+end
+
+-- =========================
+-- ABA SEA EVENTS
+-- =========================
+Section(SeaEventTab, "Eventos do Mar")
+
+Toggle(SeaEventTab, "Auto Sea Beast", function(v)
+    _G.Settings.AutoSeaBeast = v
+end, "AutoSeaBeast")
+
+Toggle(SeaEventTab, "Auto Terrorshark", function(v)
+    _G.Settings.AutoTerrorshark = v
+end, "AutoTerrorshark")
+
+Toggle(SeaEventTab, "Auto Piranha", function(v)
+    _G.Settings.AutoPiranha = v
+end, "AutoPiranha")
+
+Section(SeaEventTab, "Barco Automático")
+
+Dropdown(SeaEventTab, "Barco", {"Nenhum", "PirateBrigade", "PirateGrandBrigade", "MarineBrigade"}, function(v)
+    _G.Settings.SeaEventBoat = v
+end, "SeaEventBoat")
+
+Dropdown(SeaEventTab, "Profundidade", {"Mar 1", "Mar 2", "Mar 3", "Mar 4", "Mar 5", "Mar 6"}, function(v)
+    _G.Settings.SeaDepth = v
+end, "SeaDepth")
+
+Toggle(SeaEventTab, "Ativar Barco Automático", function(v)
+    _G.Settings.SeaEventActive = v
+end, "SeaEventActive")
+
+Section(SeaEventTab, "Ilhas Especiais (Sea 3)")
+
+if Sea == 3 then
+    Toggle(SeaEventTab, "Auto Find Mirage Island", function(v)
+        _G.Settings.AutoMirage = v
+    end, "AutoMirage")
+    
+    Toggle(SeaEventTab, "Auto Find Volcano", function(v)
+        _G.Settings.AutoVolcano = v
+    end, "AutoVolcano")
+    
+    Toggle(SeaEventTab, "Auto Find Leviathan", function(v)
+        _G.Settings.AutoLeviathan = v
+    end, "AutoLeviathan")
+    
+    Button(SeaEventTab, "🌋 Craft Volcanic Magnet", function()
+        local remote = GetRemote()
+        if remote then
+            TP(CFrame.new(-10961, 331, -8500)) -- Volcano location
+            task.wait(2)
+            remote:InvokeServer("CraftVolcanicMagnet")
+            Notify("✅ Tentando craftar Volcanic Magnet...")
+        end
+    end)
+end
+
+Section(SeaEventTab, "Katakuri (Sea 2)")
+
+if Sea == 2 then
+    Toggle(SeaEventTab, "Auto Farm Katakuri Quest", function(v)
+        _G.Settings.AutoKatakuriQuest = v
+    end, "AutoKatakuriQuest")
+    
+    local KatakuriInfo = Instance.new("TextLabel", SeaEventTab)
+    KatakuriInfo.Size = UDim2.new(1, 0, 0, 60)
+    KatakuriInfo.Text = "📌 Progresso Katakuri:\nCarregando..."
+    KatakuriInfo.TextColor3 = Color3.fromRGB(200, 200, 200)
+    KatakuriInfo.BackgroundColor3 = Config.Tema.Botao
+    KatakuriInfo.BackgroundTransparency = 0.5
+    KatakuriInfo.Font = Enum.Font.Gotham
+    KatakuriInfo.TextSize = 9
+    KatakuriInfo.TextWrapped = true
+    Instance.new("UICorner", KatakuriInfo).CornerRadius = UDim.new(0, 6)
+    
+    -- Atualizar progresso Katakuri
+    task.spawn(function()
+        while task.wait(10) do
+            pcall(function()
+                local remote = GetRemote()
+                if remote then
+                    local progress = remote:InvokeServer("CakePrinceSpawner")
+                    if progress and type(progress) == "number" then
+                        KatakuriInfo.Text = string.format("📌 Progresso Katakuri:\n%d/500 (%d restantes)", progress, 500 - progress)
+                    end
+                end
+            end)
+        end
+    end)
+end
+
+-- =========================
+-- ABA ESP
+-- =========================
+Section(ESPTab, "ESP Geral")
+
+Toggle(ESPTab, "ESP Frutas", function(v)
+    _G.Settings.ESPFruit = v
+end, "ESPFruit")
+
+Toggle(ESPTab, "ESP Ilhas", function(v)
+    _G.Settings.ESPIsland = v
+end, "ESPIsland")
+
+Toggle(ESPTab, "ESP Players", function(v)
+    _G.Settings.ESPPlayer = v
+end, "ESPPlayer")
+
+Toggle(ESPTab, "ESP Chests", function(v)
+    _G.Settings.ESPChest = v
+end, "ESPChest")
+
+Toggle(ESPTab, "ESP Flowers", function(v)
+    _G.Settings.ESPFlower = v
+end, "ESPFlower")
+
+Toggle(ESPTab, "ESP NPCs", function(v)
+    _G.Settings.ESPNPC = v
+end, "ESPNPC")
+
+Section(ESPTab, "ESP Especial")
+
+Toggle(ESPTab, "ESP Mirage Island", function(v)
+    _G.Settings.ESPMirage = v
+end, "ESPMirage")
+
+Toggle(ESPTab, "ESP Gear", function(v)
+    _G.Settings.ESPGear = v
+end, "ESPGear")
+
+Toggle(ESPTab, "ESP Elite Hunter", function(v)
+    _G.Settings.ESPEliteHunter = v
+end, "ESPEliteHunter")
+
+-- =========================
+-- ABA CONFIG
+-- =========================
+Section(ConfigTab, "Configurações de Personagem")
+
+Toggle(ConfigTab, "Andar na Água", function(v)
+    _G.Settings.WalkOnWater = v
+end, "WalkOnWater")
+
+Toggle(ConfigTab, "Remover Neblina", function(v)
+    _G.Settings.RemoveFog = v
+end, "RemoveFog")
+
+Toggle(ConfigTab, "Anti AFK", function(v)
+    _G.Settings.AntiAFK = v
+end, "AntiAFK")
+
+Toggle(ConfigTab, "Auto Rejoin on Kick", function(v)
+    _G.Settings.AutoRejoin = v
+end, "AutoRejoin")
+
+Toggle(ConfigTab, "No Clip", function(v)
+    _G.Settings.NoClip = v
+end, "NoClip")
+
+Toggle(ConfigTab, "Infinite Energy", function(v)
+    _G.Settings.InfiniteEnergy = v
+end, "InfiniteEnergy")
+
+Section(ConfigTab, "Visual")
+
+Toggle(ConfigTab, "Remover Dano Visual", function(v)
+    _G.Settings.RemoveDamage = v
+end, "RemoveDamage")
+
+Toggle(ConfigTab, "White Screen", function(v)
+    _G.Settings.WhiteScreen = v
+    if v then
+        Lighting.Ambient = Color3.new(1, 1, 1)
+        Lighting.Brightness = 2
+        Lighting.ColorShift_Bottom = Color3.new(1, 1, 1)
+        Lighting.ColorShift_Top = Color3.new(1, 1, 1)
+        Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+    else
+        Lighting.Ambient = Color3.new(0, 0, 0)
+        Lighting.Brightness = 1
+        Lighting.ColorShift_Bottom = Color3.new(0, 0, 0)
+        Lighting.ColorShift_Top = Color3.new(0, 0, 0)
+        Lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+    end
+end, "WhiteScreen")
+
+Section(ConfigTab, "Performance")
+
+Button(ConfigTab, "🔧 Boost FPS (Low Graphics)", function()
+    -- Reduzir qualidade gráfica para melhorar FPS
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Part") or v:IsA("MeshPart") then
+            v.Material = Enum.Material.SmoothPlastic
+            v.Reflectance = 0
+        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+            v.Enabled = false
+        elseif v:IsA("Fire") or v:IsA("Smoke") then
+            v.Enabled = false
+        end
+    end
+    Notify("✅ FPS Boost ativado!")
+end)
+
+Button(ConfigTab, "💾 Salvar Configuração", function()
+    SaveConfig()
+    Notify("✅ Configuração salva!")
+end)
+
+Button(ConfigTab, "🔄 Resetar Configuração", function()
+    _G.Settings = {
+        AutoFarmLevel = false,
+        AutoFarmBoss = false,
+        SelectedBoss = "All",
+        AutoChest = false,
+        FastAttack = false,
+        AutoHaki = false,
+        WeaponType = "Nenhum",
+        FarmDistance = 30,
+        BringMobs = true,
+    }
+    SaveConfig()
+    Notify("✅ Configuração resetada!")
+end)
+
+-- =========================
+-- ABA PVP
+-- =========================
+Section(PVPTab, "Auto PVP")
+
+Toggle(PVPTab, "Auto PVP", function(v)
+    _G.Settings.AutoPVP = v
+end, "AutoPVP")
+
+local playerList = {}
+for _, player in pairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        table.insert(playerList, player.Name)
+    end
+end
+
+Dropdown(PVPTab, "Jogador Alvo", playerList, function(v)
+    _G.Settings.SelectedPlayer = v
+end, "SelectedPlayer")
+
+Toggle(PVPTab, "Modo Seguro (30% HP)", function(v)
+    _G.Settings.SafeMode = v
+end, "SafeMode")
+
+Section(PVPTab, "Aimbot")
+
+Toggle(PVPTab, "Aimbot", function(v)
+    _G.Settings.Aimbot = v
+end, "Aimbot")
+
+Toggle(PVPTab, "Aim Through Walls", function(v)
+    _G.Settings.AimThroughWalls = v
+end, "AimThroughWalls")
+
+Section(PVPTab, "Bounty Hunting")
+
+Toggle(PVPTab, "Auto Farm Bounty", function(v)
+    _G.Settings.AutoFarmBounty = v
+end, "AutoFarmBounty")
+
+Button(PVPTab, "📊 Ver Minha Bounty", function()
+    local bounty = LocalPlayer.leaderstats.Bounty.Value
+    Notify("💰 Sua Bounty: $" .. FormatNumber(bounty))
+end)
+
+-- =========================
+-- ABA MISC
+-- =========================
+Section(MiscTab, "Automações Extras")
+
+Toggle(MiscTab, "Auto Buy Chips", function(v)
+    _G.Settings.AutoBuyChips = v
+end, "AutoBuyChips")
+
+Toggle(MiscTab, "Auto Buy Legendary Sword", function(v)
+    _G.Settings.AutoBuyLegendarySword = v
+end, "AutoBuyLegendarySword")
+
+Toggle(MiscTab, "Auto Observation Haki", function(v)
+    _G.Settings.AutoObservation = v
+end, "AutoObservation")
+
+Toggle(MiscTab, "Auto Saber", function(v)
+    _G.Settings.AutoSaber = v
+end, "AutoSaber")
+
+Toggle(MiscTab, "Auto Pole V1", function(v)
+    _G.Settings.AutoPole = v
+end, "AutoPole")
+
+Section(MiscTab, "Redeem Codes")
+
+local CodeBox = Instance.new("TextBox", MiscTab)
+CodeBox.Size = UDim2.new(1, 0, 0, 40)
+CodeBox.PlaceholderText = "Digite o código aqui..."
+CodeBox.Text = ""
+CodeBox.BackgroundColor3 = Config.Tema.Botao
+CodeBox.BackgroundTransparency = 0.3
+CodeBox.TextColor3 = Config.Tema.Texto
+CodeBox.BorderSizePixel = 0
+CodeBox.Font = Enum.Font.Gotham
+CodeBox.TextSize = 11
+
+Instance.new("UICorner", CodeBox).CornerRadius = UDim.new(0, 6)
+
+Button(MiscTab, "🎁 Resgatar Código", function()
+    if CodeBox.Text ~= "" then
+        local remote = GetRemote()
+        if remote then
+            remote:InvokeServer("Redeem", CodeBox.Text)
+            Notify("✅ Código enviado: " .. CodeBox.Text)
+            CodeBox.Text = ""
+        end
+    else
+        Notify("⚠️ Digite um código!")
+    end
+end)
+
+Section(MiscTab, "Códigos Ativos")
+
+local codesText = [[
+📋 CÓDIGOS VÁLIDOS:
+- Sub2CaptainMaui
+- kittgaming
+- Sub2Fer999
+- Enyu_is_Pro
+- Magicbus
+- JCWK
+- Starcodeheo
+- Bluxxy
+- SUB2GAMERROBOT_EXP1
+]]
+
+local CodesLabel = Instance.new("TextLabel", MiscTab)
+CodesLabel.Size = UDim2.new(1, 0, 0, 200)
+CodesLabel.Text = codesText
+CodesLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+CodesLabel.BackgroundColor3 = Config.Tema.Botao
+CodesLabel.BackgroundTransparency = 0.5
+CodesLabel.Font = Enum.Font.Gotham
+CodesLabel.TextSize = 8
+CodesLabel.TextWrapped = true
+CodesLabel.TextYAlignment = Enum.TextYAlignment.Top
+CodesLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+Instance.new("UICorner", CodesLabel).CornerRadius = UDim.new(0, 6)
+
+Section(MiscTab, "Utilidades")
+
+Button(MiscTab, "🔄 Rejoin Server", function()
+    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+end)
+
+Button(MiscTab, "🎲 Join Low Player Server", function()
+    local servers = {}
+    local req = game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
+    local body = HttpService:JSONDecode(req)
+    
+    if body and body.data then
+        for _, v in pairs(body.data) do
+            if v.playing < v.maxPlayers - 10 then
+                table.insert(servers, v)
+            end
+        end
+        
+        if #servers > 0 then
+            local server = servers[math.random(1, #servers)]
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, server.id, LocalPlayer)
+        else
+            Notify("⚠️ Nenhum servidor encontrado!")
+        end
+    end
+end)
+
+Button(MiscTab, "📋 Copy Discord Link", function()
+    pcall(function()
+        setclipboard("https://discord.gg/RnZ6XHHFj7")
+    end)
+    Notify("✅ Link copiado!")
+end)
+
+-- =========================
+-- CONTROLES DA GUI
+-- =========================
+Bubble.MouseButton1Click:Connect(function()
+    Config.Aberto = not Config.Aberto
+    if Config.Aberto then
+        Main.Visible = true
+        Tween(Main, 0.3, {Size = UDim2.fromOffset(500, 550)})
+    else
+        Tween(Main, 0.3, {Size = UDim2.fromOffset(0, 0)})
+        task.wait(0.3)
+        Main.Visible = false
+    end
+end)
+
+MinBtn.MouseButton1Click:Connect(function()
+    Config.Minimizado = true
+    Body.Visible = false
+    Tween(Main, 0.3, {Size = UDim2.fromOffset(500, 50)})
+    MinBtn.Visible = false
+    MaxBtn.Visible = true
+end)
+
+MaxBtn.MouseButton1Click:Connect(function()
+    Config.Minimizado = false
+    Body.Visible = true
+    Tween(Main, 0.3, {Size = UDim2.fromOffset(500, 550)})
+    MaxBtn.Visible = false
+    MinBtn.Visible = true
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    Config.Aberto = false
+    Tween(Main, 0.3, {Size = UDim2.fromOffset(0, 0)})
+    task.wait(0.3)
+    Main.Visible = false
+end)
+
+-- Busca nas abas
+Search:GetPropertyChangedSignal("Text"):Connect(function()
+    local searchText = Search.Text:lower()
+    for _, tab in pairs(Tabs) do
+        for _, item in pairs(tab.Frame:GetChildren()) do
+            if item:IsA("Frame") or item:IsA("TextButton") then
+                local textLabel = item:FindFirstChildWhichIsA("TextLabel", true)
+                if textLabel then
+                    local itemText = textLabel.Text:lower()
+                    item.Visible = searchText == "" or itemText:find(searchText) ~= nil
+                end
+            end
+        end
+    end
+end)
+
+-- =========================
+-- AUTO REJOIN ON KICK
+-- =========================
+task.spawn(function()
+    while task.wait(1) do
+        if _G.Settings.AutoRejoin then
+            local success, err = pcall(function()
+                game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+                    if child.Name == 'ErrorPrompt' then
+                        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+                    end
+                end)
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- NO CLIP
+-- =========================
+task.spawn(function()
+    while task.wait(0.1) do
+        if _G.Settings.NoClip then
+            pcall(function()
+                for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.CanCollide = false
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- INFINITE ENERGY
+-- =========================
+task.spawn(function()
+    while task.wait(0.1) do
+        if _G.Settings.InfiniteEnergy then
+            pcall(function()
+                LocalPlayer.Character.Energy.Value = LocalPlayer.Character.Energy.MaxValue
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO TERRORSHARK
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoTerrorshark then
+            pcall(function()
+                for _, v in pairs(workspace.Enemies:GetChildren()) do
+                    if v.Name == "Terrorshark" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                        repeat
+                            task.wait()
+                            EquipWeapon()
+                            v.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 50, 0)
+                            _G.Settings.FastAttack = true
+                        until not v.Parent or v.Humanoid.Health <= 0 or not _G.Settings.AutoTerrorshark
+                        _G.Settings.FastAttack = false
+                        Notify("✅ Terrorshark derrotado!")
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO PIRANHA
+-- =========================
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoPiranha then
+            pcall(function()
+                for _, v in pairs(workspace.Enemies:GetChildren()) do
+                    if v.Name == "Piranha" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                        repeat
+                            task.wait()
+                            EquipWeapon()
+                            v.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                            _G.Settings.FastAttack = true
+                        until not v.Parent or v.Humanoid.Health <= 0 or not _G.Settings.AutoPiranha
+                        _G.Settings.FastAttack = false
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- NOTIFICAÇÃO INICIAL
+-- =========================
+task.spawn(function()
+    -- Mostrar opções ativas
+    if configLoaded then
+        local activeFeatures = {}
+        for k, v in pairs(_G.Settings) do
+            if type(v) == "boolean" and v == true then
+                local featureName = k:gsub("Auto", ""):gsub("ESP", "")
+                table.insert(activeFeatures, featureName)
+            end
+        end
+        
+        if #activeFeatures > 0 then
+            local message = "Opções Ativas:\n" .. table.concat(activeFeatures, ", ")
+            Notify(message, 5)
+        end
+    end
+    
+    task.wait(configLoaded and 5 or 0.5)
+    
+    print("=================================")
+    print("  LAG TECK HUB v2.0 CARREGADO")
+    print("=================================")
+    print("✅ SEA: " .. Sea)
+    print("✅ Level: " .. LocalPlayer.Data.Level.Value)
+    print("✅ Raça: " .. (LocalPlayer.Data.Race.Value or "N/A"))
+    print("✅ Beli: $" .. FormatNumber(LocalPlayer.Data.Beli.Value))
+    print("✅ Fragmentos: " .. FormatNumber(LocalPlayer.Data.Fragments.Value))
+    print("✅ Discord: discord.gg/RnZ6XHHFj7")
+    print("=================================")
+    print("🎉 SCRIPT TOTALMENTE CARREGADO!")
+    print("=================================")
+    
+    Notify("✅ Lag Teck Hub v2.0 Carregado!\n\n🎮 Clique na bolinha para abrir\n💾 Config " .. (configLoaded and "carregada" or "padrão"), 3)
+end)
+
+-- =========================
+-- FIM DO SCRIPT
+-- =========================
+print("🎉 LAG TECK HUB v2.0 - TODAS AS 8 PARTES CARREGADAS COM SUCESSO!")
