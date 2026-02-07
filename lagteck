@@ -670,3 +670,307 @@ task.spawn(function()
     end
 end)
 
+-- =========================
+-- AUTO FARM BOSS
+-- =========================
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.Settings.AutoFarmBoss then
+            pcall(function()
+                for _, boss in pairs(workspace.Enemies:GetChildren()) do
+                    if boss:FindFirstChild("Humanoid") and boss:FindFirstChild("HumanoidRootPart") and boss.Humanoid.Health > 0 then
+                        if _G.Settings.SelectedBoss == "All" or boss.Name == _G.Settings.SelectedBoss then
+                            repeat
+                                task.wait()
+                                if not _G.Settings.AutoFarmBoss then break end
+                                EquipWeapon()
+                                boss.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                                boss.HumanoidRootPart.Transparency = 1
+                                boss.Humanoid.WalkSpeed = 0
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = boss.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                                _G.Settings.FastAttack = true
+                            until not boss.Parent or boss.Humanoid.Health <= 0 or not _G.Settings.AutoFarmBoss
+                            _G.Settings.FastAttack = false
+                        end
+                    end
+                end
+            end)
+        else
+            _G.Settings.FastAttack = false
+        end
+    end
+end)
+
+-- =========================
+-- AUTO CHEST
+-- =========================
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.Settings.AutoChest then
+            pcall(function()
+                for _, chest in pairs(workspace:GetChildren()) do
+                    if chest.Name:find("Chest") and (chest:FindFirstChild("Part") or chest:FindFirstChild("MeshPart")) then
+                        local chestPart = chest:FindFirstChild("Part") or chest:FindFirstChild("MeshPart")
+                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            if (LocalPlayer.Character.HumanoidRootPart.Position - chestPart.Position).Magnitude < 5000 then
+                                TP(chestPart.CFrame * CFrame.new(0, 3, 0))
+                                task.wait(0.2)
+                                if (LocalPlayer.Character.HumanoidRootPart.Position - chestPart.Position).Magnitude < 5 then
+                                    local remote = GetRemote()
+                                    if remote then
+                                        remote:InvokeServer("OpenChest", chest.Name)
+                                    end
+                                    task.wait(1)
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- FRUIT SYSTEMS
+-- =========================
+task.spawn(function()
+    while task.wait(1) do
+        if _G.Settings.AutoFruitSniper then
+            pcall(function()
+                for _, fruit in pairs(workspace:GetChildren()) do
+                    if fruit:IsA("Tool") and fruit:FindFirstChild("Handle") then
+                        TP(fruit.Handle.CFrame)
+                        task.wait(0.5)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(2) do
+        if _G.Settings.AutoStoreFruit then
+            pcall(function()
+                for _, fruit in pairs(LocalPlayer.Backpack:GetChildren()) do
+                    if fruit:IsA("Tool") and fruit:FindFirstChild("Handle") then
+                        local remote = GetRemote()
+                        if remote then
+                            remote:InvokeServer("StoreFruit", fruit:GetAttribute("OriginalName"), LocalPlayer.Backpack[fruit.Name])
+                            task.wait(0.5)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(10) do
+        if _G.Settings.AutoBuyFruit then
+            pcall(function()
+                local remote = GetRemote()
+                if remote then
+                    remote:InvokeServer("PurchaseRawFruit", _G.Settings.SelectedFruit, false)
+                end
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(2) do
+        if _G.Settings.AutoRandomFruit then
+            pcall(function()
+                local remote = GetRemote()
+                if remote then
+                    remote:InvokeServer("Cousin", "Buy")
+                end
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- AUTO PVP
+-- =========================
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.Settings.AutoPVP and _G.Settings.SelectedPlayer then
+            pcall(function()
+                local targetPlayer = Players:FindFirstChild(_G.Settings.SelectedPlayer)
+                if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and targetPlayer.Character:FindFirstChild("Humanoid") and targetPlayer.Character.Humanoid.Health > 0 then
+                    EquipWeapon()
+                    repeat
+                        task.wait()
+                        if not _G.Settings.AutoPVP or not targetPlayer.Character or targetPlayer.Character.Humanoid.Health <= 0 then break end
+                        if _G.Settings.SafeMode and LocalPlayer.Character.Humanoid.Health < LocalPlayer.Character.Humanoid.MaxHealth * 0.3 then
+                            Notify("⚠️ Safe Mode ativado - vida baixa!")
+                            break
+                        end
+                        LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 5)
+                        _G.Settings.FastAttack = true
+                    until not targetPlayer.Character or targetPlayer.Character.Humanoid.Health <= 0 or not _G.Settings.AutoPVP
+                    _G.Settings.FastAttack = false
+                end
+            end)
+        else
+            _G.Settings.FastAttack = false
+        end
+    end
+end)
+
+-- =========================
+-- ANTI AFK
+-- =========================
+task.spawn(function()
+    while task.wait(60) do
+        if _G.Settings.AntiAFK then
+            pcall(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- SEA EVENT SYSTEMS
+-- =========================
+local SeaDepthPositions = {["Mar 1"] = -50, ["Mar 2"] = -100, ["Mar 3"] = -200, ["Mar 4"] = -400, ["Mar 5"] = -600, ["Mar 6"] = -800}
+local circleRadius = 300
+local circleAngle = 0
+
+task.spawn(function()
+    while task.wait(1) do
+        if _G.Settings.SeaEventActive and _G.Settings.SeaEventBoat ~= "Nenhum" then
+            pcall(function()
+                local boat = workspace.Boats:FindFirstChild(_G.Settings.SeaEventBoat)
+                if boat and boat:FindFirstChild("VehicleSeat") then
+                    local depth = SeaDepthPositions[_G.Settings.SeaDepth] or -50
+                    circleAngle = circleAngle + 0.05
+                    if circleAngle >= math.pi * 2 then circleAngle = 0 end
+                    local xOffset = math.cos(circleAngle) * circleRadius
+                    local zOffset = math.sin(circleAngle) * circleRadius
+                    local currentPos = boat.VehicleSeat.CFrame.Position
+                    local newCFrame = CFrame.new(currentPos.X + xOffset, depth, currentPos.Z + zOffset)
+                    boat.VehicleSeat.CFrame = newCFrame
+                end
+            end)
+        end
+    end
+end)
+
+-- AUTO KATAKURI (SEA 2)
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoKatakuri and Sea == 2 then
+            pcall(function()
+                local remote = GetRemote()
+                if remote then
+                    local progress = remote:InvokeServer("CakePrinceSpawner")
+                    if progress and type(progress) == "number" and progress >= 500 then
+                        -- Teleportar para Katakuri
+                        TP(CFrame.new(-2077, 252, -12373))
+                        
+                        -- Procurar e farmar Katakuri
+                        for _, boss in pairs(workspace.Enemies:GetChildren()) do
+                            if boss.Name == "Cake Prince" and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+                                repeat
+                                    task.wait()
+                                    EquipWeapon()
+                                    boss.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                                    LocalPlayer.Character.HumanoidRootPart.CFrame = boss.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                                    _G.Settings.FastAttack = true
+                                until not boss.Parent or boss.Humanoid.Health <= 0 or not _G.Settings.AutoKatakuri
+                                _G.Settings.FastAttack = false
+                                Notify("✅ Katakuri derrotado!")
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- AUTO MIRAGE ISLAND
+task.spawn(function()
+    while task.wait(10) do
+        if _G.Settings.AutoMirage and Sea == 3 then
+            pcall(function()
+                for _, v in pairs(workspace:GetChildren()) do
+                    if v.Name == "MysticIsland" then
+                        TP(v:FindFirstChild("Center") and v.Center.CFrame or CFrame.new(v:GetModelCFrame().Position))
+                        Notify("✅ Miragem encontrada!")
+                        break
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- AUTO VOLCANO
+task.spawn(function()
+    while task.wait(10) do
+        if _G.Settings.AutoVolcano and Sea == 3 then
+            pcall(function()
+                -- Procurar ilha do vulcão
+                for _, v in pairs(workspace:GetChildren()) do
+                    if v.Name:find("Volcano") then
+                        TP(CFrame.new(v:GetModelCFrame().Position))
+                        Notify("✅ Vulcão encontrado!")
+                        
+                        -- Craftar Volcanic Magnet
+                        local remote = GetRemote()
+                        if remote then
+                            remote:InvokeServer("CraftVolcanicMagnet")
+                        end
+                        break
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- AUTO LEVIATHAN
+task.spawn(function()
+    while task.wait(10) do
+        if _G.Settings.AutoLeviathan and Sea == 3 then
+            pcall(function()
+                if workspace:FindFirstChild("Leviathan") then
+                    local leviathan = workspace.Leviathan
+                    TP(leviathan:FindFirstChild("HumanoidRootPart") and leviathan.HumanoidRootPart.CFrame or CFrame.new(leviathan:GetModelCFrame().Position))
+                    Notify("✅ Leviathan encontrado!")
+                end
+            end)
+        end
+    end
+end)
+
+-- AUTO SEA BEAST
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AutoSeaBeast then
+            pcall(function()
+                for _, v in pairs(workspace.SeaBeasts:GetChildren()) do
+                    if v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                        repeat
+                            task.wait()
+                            EquipWeapon()
+                            v.HumanoidRootPart.Size = Vector3.new(60,60,60)
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 50, 0)
+                            _G.Settings.FastAttack = true
+                        until not v.Parent or v.Humanoid.Health <= 0 or not _G.Settings.AutoSeaBeast
+                        _G.Settings.FastAttack = false
+                        Notify("✅ Sea Beast derrotado!")
+                    end
+                end
+            end)
+        end
+    end
+end)
