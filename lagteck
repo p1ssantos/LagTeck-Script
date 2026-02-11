@@ -3760,60 +3760,6 @@ Button(MiscTab, "📋 Copy Discord Link", function()
 end)
 
 -- =========================
--- CONTROLES DA GUI
--- =========================
-Bubble.MouseButton1Click:Connect(function()
-    Config.Aberto = not Config.Aberto
-    if Config.Aberto then
-        Main.Visible = true
-        Tween(Main, 0.3, {Size = UDim2.fromOffset(500, 550)})
-    else
-        Tween(Main, 0.3, {Size = UDim2.fromOffset(0, 0)})
-        task.wait(0.3)
-        Main.Visible = false
-    end
-end)
-
-MinBtn.MouseButton1Click:Connect(function()
-    Config.Minimizado = true
-    Body.Visible = false
-    Tween(Main, 0.3, {Size = UDim2.fromOffset(500, 50)})
-    MinBtn.Visible = false
-    MaxBtn.Visible = true
-end)
-
-MaxBtn.MouseButton1Click:Connect(function()
-    Config.Minimizado = false
-    Body.Visible = true
-    Tween(Main, 0.3, {Size = UDim2.fromOffset(500, 550)})
-    MaxBtn.Visible = false
-    MinBtn.Visible = true
-end)
-
-CloseBtn.MouseButton1Click:Connect(function()
-    Config.Aberto = false
-    Tween(Main, 0.3, {Size = UDim2.fromOffset(0, 0)})
-    task.wait(0.3)
-    Main.Visible = false
-end)
-
--- Busca nas abas
-Search:GetPropertyChangedSignal("Text"):Connect(function()
-    local searchText = Search.Text:lower()
-    for _, tab in pairs(Tabs) do
-        for _, item in pairs(tab.Frame:GetChildren()) do
-            if item:IsA("Frame") or item:IsA("TextButton") then
-                local textLabel = item:FindFirstChildWhichIsA("TextLabel", true)
-                if textLabel then
-                    local itemText = textLabel.Text:lower()
-                    item.Visible = searchText == "" or itemText:find(searchText) ~= nil
-                end
-            end
-        end
-    end
-end)
-
--- =========================
 -- AUTO REJOIN ON KICK
 -- =========================
 task.spawn(function()
@@ -3953,23 +3899,31 @@ end)
 print("🎉 LAG TECK HUB v2.0 - TODAS AS 8 PARTES CARREGADAS COM SUCESSO!")
 
 -- =========================
--- CONTROLES DA GUI - VERSÃO FINAL ÚNICA
+-- CONTROLES DA GUI (CORRIGIDO)
 -- =========================
 
+-- Configurar Main antes dos botões
+Main.Active = true
+Main.Visible = false
+
+-- Botão da Bolinha (Abrir/Fechar)
 Bubble.MouseButton1Click:Connect(function()
     Config.Aberto = not Config.Aberto
+    print("🔵 Clicou na bolinha! Aberto:", Config.Aberto)
     
     if Config.Aberto then
         Main.Visible = true
+        Main.Size = UDim2.fromOffset(0, 0)
         Tween(Main, 0.3, {Size = UDim2.fromOffset(500, 550)})
-        print("🎮 Painel aberto!")
+        Body.Visible = true
     else
         Tween(Main, 0.3, {Size = UDim2.fromOffset(0, 0)})
-        task.wait(0.3)
+        task.wait(0.35)
         Main.Visible = false
     end
 end)
 
+-- Botão Minimizar
 MinBtn.MouseButton1Click:Connect(function()
     Config.Minimizado = true
     Body.Visible = false
@@ -3978,6 +3932,7 @@ MinBtn.MouseButton1Click:Connect(function()
     MaxBtn.Visible = true
 end)
 
+-- Botão Maximizar
 MaxBtn.MouseButton1Click:Connect(function()
     Config.Minimizado = false
     Body.Visible = true
@@ -3986,11 +3941,42 @@ MaxBtn.MouseButton1Click:Connect(function()
     MinBtn.Visible = true
 end)
 
+-- Botão Fechar
 CloseBtn.MouseButton1Click:Connect(function()
     Config.Aberto = false
     Tween(Main, 0.3, {Size = UDim2.fromOffset(0, 0)})
-    task.wait(0.3)
+    task.wait(0.35)
     Main.Visible = false
+end)
+
+-- Arrastar pela barra superior
+local dragging = false
+local dragInput, dragStart, startPos
+
+Top.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Main.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Top.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+        local delta = input.Position - dragStart
+        Main.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
 end)
 
 -- Busca
@@ -4001,8 +3987,7 @@ Search:GetPropertyChangedSignal("Text"):Connect(function()
             if item:IsA("Frame") or item:IsA("TextButton") then
                 local textLabel = item:FindFirstChildWhichIsA("TextLabel", true)
                 if textLabel then
-                    local itemText = textLabel.Text:lower()
-                    item.Visible = searchText == "" or itemText:find(searchText) ~= nil
+                    item.Visible = searchText == "" or textLabel.Text:lower():find(searchText)
                 end
             end
         end
@@ -4024,5 +4009,5 @@ for nome, tab in pairs(Tabs) do
     end)
 end
 
-print("✅ GUI CARREGADA COM SUCESSO!")
-Notify("✅ Hub Carregado!\n\n🎮 Clique na bolinha", 3)
+print("✅ GUI PRONTA!")
+Notify("✅ Hub Carregado!", 3)
