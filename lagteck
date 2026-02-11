@@ -167,9 +167,9 @@ local Config = {
     Aberto = false,
     Minimizado = false,
     Tema = {
-        Fundo = Color3.fromRGB(10,15,30),
-        Secundario = Color3.fromRGB(15,25,45),
-        Botao = Color3.fromRGB(20,35,60),
+        Fundo = Color3.fromRGB(15,25,50),
+Secundario = Color3.fromRGB(25,40,70),
+Botao = Color3.fromRGB(35,55,90),
         Ativo = Color3.fromRGB(0,120,255),
         Texto = Color3.fromRGB(255,255,255),
         AzulClaro = Color3.fromRGB(50,150,255)
@@ -2411,7 +2411,7 @@ Search.Position = UDim2.fromOffset(10, 5)
 Search.PlaceholderText = "🔍 Pesquisar..."
 Search.Text = ""
 Search.BackgroundColor3 = Config.Tema.Botao
-Search.BackgroundTransparency = 0.3
+Search.BackgroundTransparency = 0
 Search.TextColor3 = Config.Tema.Texto
 Search.BorderSizePixel = 0
 Search.Font = Enum.Font.Gotham
@@ -2501,7 +2501,7 @@ local function AddToSelected(name, settingKey)
         local Box = Instance.new("Frame", SelectedFrame)
         Box.Size = UDim2.new(1, 0, 0, 40)
         Box.BackgroundColor3 = Config.Tema.Ativo
-        Box.BackgroundTransparency = 0.5
+        Box.BackgroundTransparency = 0
         Box.BorderSizePixel = 0
         
         Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
@@ -2532,7 +2532,7 @@ local function Toggle(parent, texto, callback, settingKey)
     local Box = Instance.new("Frame", parent)
     Box.Size = UDim2.new(1, 0, 0, 45)
     Box.BackgroundColor3 = Config.Tema.Botao
-    Box.BackgroundTransparency = 0.3
+    Box.BackgroundTransparency = 0
     Box.BorderSizePixel = 0
     
     Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
@@ -2607,7 +2607,7 @@ local function Dropdown(parent, texto, options, callback, settingKey)
     local Box = Instance.new("Frame", parent)
     Box.Size = UDim2.new(1, 0, 0, 45)
     Box.BackgroundColor3 = Config.Tema.Botao
-    Box.BackgroundTransparency = 0.3
+    Box.BackgroundTransparency = 0
     Box.BorderSizePixel = 0
     
     Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
@@ -2696,10 +2696,10 @@ local function Button(parent, texto, callback)
     Btn.Size = UDim2.new(1, 0, 0, 45)
     Btn.Text = texto
     Btn.BackgroundColor3 = Config.Tema.Ativo
-    Btn.BackgroundTransparency = 0.3
-    Btn.TextColor3 = Config.Tema.Texto
-    Btn.Font = Enum.Font.GothamBold
-    Btn.TextSize = 11
+Btn.BackgroundTransparency = 0
+Btn.TextColor3 = Config.Tema.Texto
+Btn.Font = Enum.Font.GothamBold
+Btn.TextSize = 11
     Btn.BorderSizePixel = 0
     
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
@@ -2715,7 +2715,7 @@ local function Section(parent, texto)
     local Box = Instance.new("Frame", parent)
     Box.Size = UDim2.new(1, 0, 0, 32)
     Box.BackgroundColor3 = Config.Tema.AzulClaro
-    Box.BackgroundTransparency = 0.5
+    Box.BackgroundTransparency = 0
     Box.BorderSizePixel = 0
     
     Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
@@ -2734,8 +2734,8 @@ local function InfoBox(parent, title, value, color)
     local Box = Instance.new("Frame", parent)
     Box.Size = UDim2.new(1, 0, 0, 55)
     Box.BackgroundColor3 = Config.Tema.Botao
-    Box.BackgroundTransparency = 0.3
-    Box.BorderSizePixel = 0
+Box.BackgroundTransparency = 0
+Box.BorderSizePixel = 0
     
     Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 8)
     
@@ -2766,7 +2766,7 @@ local function StatusIndicator(parent, title, isActive, requiresSea3)
     local Box = Instance.new("Frame", parent)
     Box.Size = UDim2.new(0.48, 0, 0, 40)
     Box.BackgroundColor3 = Config.Tema.Botao
-    Box.BackgroundTransparency = 0.3
+    Box.BackgroundTransparency = 0
     Box.BorderSizePixel = 0
     
     Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
@@ -3335,7 +3335,7 @@ for i = 1, 3 do
     SeaBtn.Size = UDim2.new(0.3, 0, 0, 45)
     SeaBtn.Text = "SEA " .. i
     SeaBtn.BackgroundColor3 = Sea == i and Config.Tema.Ativo or Config.Tema.Botao
-    SeaBtn.BackgroundTransparency = 0.3
+    SeaBtn.BackgroundTransparency = 0
     SeaBtn.TextColor3 = Color3.new(1, 1, 1)
     SeaBtn.Font = Enum.Font.GothamBold
     SeaBtn.TextSize = 11
@@ -3675,7 +3675,7 @@ CodeBox.Size = UDim2.new(1, 0, 0, 40)
 CodeBox.PlaceholderText = "Digite o código aqui..."
 CodeBox.Text = ""
 CodeBox.BackgroundColor3 = Config.Tema.Botao
-CodeBox.BackgroundTransparency = 0.3
+CodeBox.BackgroundTransparency = 0
 CodeBox.TextColor3 = Config.Tema.Texto
 CodeBox.BorderSizePixel = 0
 CodeBox.Font = Enum.Font.Gotham
@@ -3716,7 +3716,7 @@ CodesLabel.Size = UDim2.new(1, 0, 0, 200)
 CodesLabel.Text = codesText
 CodesLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 CodesLabel.BackgroundColor3 = Config.Tema.Botao
-CodesLabel.BackgroundTransparency = 0.5
+CodesLabel.BackgroundTransparency = 0
 CodesLabel.Font = Enum.Font.Gotham
 CodesLabel.TextSize = 8
 CodesLabel.TextWrapped = true
@@ -4116,7 +4116,7 @@ end
 -- =========================
 -- MELHORAR SEARCH BAR
 -- =========================
-Search.BackgroundTransparency = 0.1
+Search.BackgroundTransparency = 0
 Search.BorderSizePixel = 1
 Search.BorderColor3 = Color3.fromRGB(100, 100, 100)
 
