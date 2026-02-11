@@ -2302,15 +2302,9 @@ Main.BorderSizePixel = 0
 Main.Visible = false
 Main.ZIndex = 1000
 Main.Active = true
+Main.ClipsDescendants = false
 
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
-
--- Arrastar desativado aqui (só pela borda branca no final do script)
-Main.Active = false
-local dragging = false
-local dragInput
-local dragStart
-local startPos
 
 -- =========================
 -- TOP BAR
@@ -2320,6 +2314,8 @@ Top.Size = UDim2.new(1, 0, 0, 50)
 Top.BackgroundColor3 = Config.Tema.Secundario
 Top.BackgroundTransparency = 0
 Top.BorderSizePixel = 0
+Top.ZIndex = 1001
+Top.Visible = true
 
 Instance.new("UICorner", Top).CornerRadius = UDim.new(0, 12)
 
@@ -2401,6 +2397,8 @@ local Body = Instance.new("Frame", Main)
 Body.Position = UDim2.fromOffset(0, 55)
 Body.Size = UDim2.new(1, 0, 1, -55)
 Body.BackgroundTransparency = 1
+Body.Visible = true
+Body.ZIndex = 1001
 
 -- =========================
 -- SEARCH BAR
@@ -2820,13 +2818,26 @@ local MiscTab = CriarAba("📦 Misc")
 
 SelectedFrame = SelectedTab
 
--- Ativar primeira aba
+-- Ativar primeira aba e garantir visibilidade
 for _, v in pairs(Tabs) do
     v.Frame.Visible = false
+    v.Btn.Visible = true
+    v.Btn.ZIndex = 1002
     Tween(v.Btn, 0.2, {BackgroundColor3 = Config.Tema.Botao})
 end
+
 Tabs["🏠 Home"].Frame.Visible = true
 Tween(Tabs["🏠 Home"].Btn, 0.2, {BackgroundColor3 = Config.Tema.Ativo})
+
+-- Forçar visibilidade de todos os elementos
+Search.Visible = true
+Search.ZIndex = 1002
+TabBar.Visible = true
+TabBar.ZIndex = 1002
+Content.Visible = true
+Content.ZIndex = 1002
+
+print("✅ Elementos da GUI configurados!")
 
 -- =========================
 -- ABA HOME
