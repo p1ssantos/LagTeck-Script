@@ -2305,7 +2305,7 @@ local Main = Instance.new("Frame", Gui)
 Main.Size = UDim2.fromOffset(PanelWidth, PanelHeight) 
 Main.Position = UDim2.new(0.5, -PanelWidth/2, 0.5, -PanelHeight/2)
 Main.BackgroundColor3 = Config.Tema.Fundo
-Main.BackgroundTransparency = 0.15  -- TRANSPARÊNCIA LEVE
+Main.BackgroundTransparency = 0.05  -- MAIS VISÍVEL (era 0.15)
 Main.BorderSizePixel = 0
 Main.Visible = false
 Main.ZIndex = 1000
@@ -2330,7 +2330,8 @@ ResizeHandle.Position = UDim2.new(1, -15, 1, -15)
 ResizeHandle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 ResizeHandle.BackgroundTransparency = 0.5
 ResizeHandle.BorderSizePixel = 0
-ResizeHandle.ZIndex = 2000
+ResizeHandle.ZIndex = 5000  -- MUITO ALTO, MAS SÓ NO CANTO
+ResizeHandle.Active = true  -- ADICIONADO
 
 Instance.new("UICorner", ResizeHandle).CornerRadius = UDim.new(0, 4)
 
@@ -2613,6 +2614,7 @@ local function Toggle(parent, texto, callback, settingKey)
     Box.BackgroundColor3 = Config.Tema.Botao
     Box.BackgroundTransparency = 0
     Box.BorderSizePixel = 0
+    Box.ZIndex = 1004  -- ADICIONADO
     
     Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
 
@@ -2626,6 +2628,7 @@ local function Toggle(parent, texto, callback, settingKey)
     Label.TextSize = 10
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.TextWrapped = true
+    Label.ZIndex = 1005  -- ADICIONADO
 
     local Btn = Instance.new("TextButton", Box)
     Btn.Size = UDim2.fromOffset(40, 20)
@@ -2634,6 +2637,7 @@ local function Toggle(parent, texto, callback, settingKey)
     Btn.Text = ""
     Btn.BorderSizePixel = 0
     Btn.AutoButtonColor = false
+    Btn.ZIndex = 1006  -- ADICIONADO - MAIS ALTO
     
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(1, 0)
     
@@ -2642,6 +2646,7 @@ local function Toggle(parent, texto, callback, settingKey)
     Circle.Position = UDim2.fromOffset(2, 2)
     Circle.BackgroundColor3 = Color3.new(1, 1, 1)
     Circle.BorderSizePixel = 0
+    Circle.ZIndex = 1007  -- ADICIONADO
     
     Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
     
@@ -2702,7 +2707,7 @@ local function Dropdown(parent, texto, options, callback, settingKey)
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.TextWrapped = true
 
-    local Btn = Instance.new("TextButton", Box)
+local Btn = Instance.new("TextButton", Box)
     Btn.Size = UDim2.new(0.55, 0, 0, 32)
     Btn.Position = UDim2.new(0.43, 0, 0.5, -16)
     Btn.Text = settingKey and _G.Settings[settingKey] or options[1] or "..."
@@ -2713,16 +2718,17 @@ local function Dropdown(parent, texto, options, callback, settingKey)
     Btn.TextSize = 8
     Btn.BorderSizePixel = 0
     Btn.TextTruncate = Enum.TextTruncate.AtEnd
+    Btn.ZIndex = 1006  -- ADICIONADO
     
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 5)
     
-    local DropScroll = Instance.new("ScrollingFrame", Gui)
+local DropScroll = Instance.new("ScrollingFrame", Gui)
     DropScroll.Size = UDim2.new(0, 180, 0, 0)
     DropScroll.Position = UDim2.new(0.5, 0, 0.5, 0)
     DropScroll.BackgroundColor3 = Config.Tema.Secundario
     DropScroll.BorderSizePixel = 0
     DropScroll.Visible = false
-    DropScroll.ZIndex = 10000
+    DropScroll.ZIndex = 10000  -- JÁ ESTÁ ALTO
     DropScroll.ScrollBarThickness = 3
     DropScroll.CanvasSize = UDim2.fromOffset(0, #options * 35)
     
@@ -2744,7 +2750,7 @@ local function Dropdown(parent, texto, options, callback, settingKey)
         end
     end)
     
-    for _, option in pairs(options) do
+for _, option in pairs(options) do
         local OptBtn = Instance.new("TextButton", DropScroll)
         OptBtn.Size = UDim2.new(1, 0, 0, 33)
         OptBtn.Text = option
@@ -2754,6 +2760,7 @@ local function Dropdown(parent, texto, options, callback, settingKey)
         OptBtn.TextSize = 8
         OptBtn.BorderSizePixel = 0
         OptBtn.TextTruncate = Enum.TextTruncate.AtEnd
+        OptBtn.ZIndex = 10001  -- ADICIONADO
         
         OptBtn.MouseButton1Click:Connect(function()
             Btn.Text = option
@@ -2775,11 +2782,12 @@ local function Button(parent, texto, callback)
     Btn.Size = UDim2.new(1, 0, 0, 45)
     Btn.Text = texto
     Btn.BackgroundColor3 = Config.Tema.Ativo
-Btn.BackgroundTransparency = 0
-Btn.TextColor3 = Config.Tema.Texto
-Btn.Font = Enum.Font.GothamBold
-Btn.TextSize = 11
+    Btn.BackgroundTransparency = 0
+    Btn.TextColor3 = Config.Tema.Texto
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 11
     Btn.BorderSizePixel = 0
+    Btn.ZIndex = 1004  -- ADICIONADO
     
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
     
