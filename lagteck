@@ -76,8 +76,10 @@ _G.Settings = {
     AutoKatakuri = false,
     AutoFactory = false,
     AutoSeaBeast = false,
-    SeaEventBoat = "Nenhum",
+    SelectedBoat = "Usar o que eu estou",
+    SelectedSeaEvent = "Sea Beast",
     SeaDepth = "Mar 1",
+    CircularMode = false,
     SeaEventActive = false,
     AutoMirage = false,
     AutoVolcano = false,
@@ -539,49 +541,175 @@ task.spawn(function()
 end)
 
 -- =========================
--- ESP SYSTEMS
+-- ESP SYSTEMS COMPLETO
 -- =========================
-local FruitESPs = {}
+local ESPObjects = {
+    Fruits = {},
+    Players = {},
+    Chests = {},
+    Islands = {},
+    NPCs = {},
+    Mirage = {},
+    Flowers = {},
+    Gear = {}
+}
+
+-- Função para criar ESP
+local function CreateESP(obj, text, color)
+    if obj:FindFirstChild("ESPTag") then return end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "ESPTag"
+    billboard.Parent = obj
+    billboard.Size = UDim2.new(0, 100, 0, 50)
+    billboard.AlwaysOnTop = true
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.Adornee = obj
+    
+    local label = Instance.new("TextLabel", billboard)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = color
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 14
+    label.TextStrokeTransparency = 0
+    label.Text = text
+    
+    return billboard
+end
+
+-- ESP FRUTAS
 task.spawn(function()
     while task.wait(1) do
         if _G.Settings.ESPFruit then
-            pcall(function()
-                for _, fruit in pairs(workspace:GetChildren()) do
-                    if fruit:IsA("Tool") and fruit:FindFirstChild("Handle") and not FruitESPs[fruit] then
-                        local billboard = Instance.new("BillboardGui", fruit.Handle)
-                        billboard.Size = UDim2.new(0, 100, 0, 50)
-                        billboard.AlwaysOnTop = true
-                        billboard.StudsOffset = Vector3.new(0, 3, 0)
-                        local label = Instance.new("TextLabel", billboard)
-                        label.Size = UDim2.new(1, 0, 1, 0)
-                        label.BackgroundTransparency = 1
-                        label.TextColor3 = Color3.new(1, 1, 1)
-                        label.Font = Enum.Font.GothamBold
-                        label.TextSize = 14
-                        label.TextStrokeTransparency = 0
-                        FruitESPs[fruit] = billboard
+            for _, fruit in pairs(workspace:GetChildren()) do
+                if fruit:IsA("Tool") and fruit:FindFirstChild("Handle") and not ESPObjects.Fruits[fruit] then
+                    local esp = CreateESP(fruit.Handle, fruit.Name, Color3.new(1, 1, 0))
+                    ESPObjects.Fruits[fruit] = esp
+                    
+                    task.spawn(function()
+                        while fruit and fruit.Parent and _G.Settings.ESPFruit do
+                            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                local distance = (LocalPlayer.Character.HumanoidRootPart.Position - fruit.Handle.Position).Magnitude
+                                esp.TextLabel.Text = fruit.Name .. "\n" .. math.floor(distance) .. "m"
+                            end
+                            task.wait(0.5)
+                        end
+                    end)
+                end
+            end
+        else
+            for fruit, esp in pairs(ESPObjects.Fruits) do
+                if esp then esp:Destroy() end
+            end
+            ESPObjects.Fruits = {}
+        end
+    end
+end)
+
+-- ESP PLAYERS
+task.spawn(function()
+    while task.wait(1) do
+        if _G.Settings.ESPPlayer then
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    if not ESPObjects.Players[player] then
+                        local esp = CreateESP(player.Character.HumanoidRootPart, player.Name, Color3.new(1, 0, 0))
+                        ESPObjects.Players[player] = esp
+                        
                         task.spawn(function()
-                            while fruit and fruit.Parent and _G.Settings.ESPFruit do
+                            while player and player.Character and _G.Settings.ESPPlayer do
                                 if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - fruit.Handle.Position).Magnitude
-                                    label.Text = fruit.Name .. "\n" .. math.floor(distance) .. "m"
+                                    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                                    esp.TextLabel.Text = player.Name .. "\n" .. math.floor(distance) .. "m"
                                 end
                                 task.wait(0.5)
                             end
                         end)
                     end
                 end
-            end)
-        else
-            for fruit, billboard in pairs(FruitESPs) do
-                if billboard then billboard:Destroy() end
             end
-            FruitESPs = {}
+        else
+            for player, esp in pairs(ESPObjects.Players) do
+                if esp then esp:Destroy() end
+            end
+            ESPObjects.Players = {}
         end
     end
 end)
 
--- ESP PLAYERS, ISLANDS, CHESTS similares...
+-- ESP CHESTS
+task.spawn(function()
+    while task.wait(2) do
+        if _G.Settings.ESPChest then
+            for _, chest in pairs(workspace:GetChildren()) do
+                if chest.Name:find("Chest") and not ESPObjects.Chests[chest] then
+                    local part = chest:FindFirstChild("Part") or chest:FindFirstChild("MeshPart")
+                    if part then
+                        local esp = CreateESP(part, "Chest", Color3.new(0, 1, 0))
+                        ESPObjects.Chests[chest] = esp
+                        
+                        task.spawn(function()
+                            while chest and chest.Parent and _G.Settings.ESPChest do
+                                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - part.Position).Magnitude
+                                    esp.TextLabel.Text = "Chest\n" .. math.floor(distance) .. "m"
+                                end
+                                task.wait(0.5)
+                            end
+                        end)
+                    end
+                end
+            end
+        else
+            for chest, esp in pairs(ESPObjects.Chests) do
+                if esp then esp:Destroy() end
+            end
+            ESPObjects.Chests = {}
+        end
+    end
+end)
+
+-- ESP FLOWERS
+task.spawn(function()
+    while task.wait(2) do
+        if _G.Settings.ESPFlower then
+            for _, flower in pairs(workspace:GetChildren()) do
+                if flower.Name == "Flower" and flower:FindFirstChild("Part") and not ESPObjects.Flowers[flower] then
+                    local esp = CreateESP(flower.Part, "Flower", Color3.new(1, 0, 1))
+                    ESPObjects.Flowers[flower] = esp
+                end
+            end
+        else
+            for flower, esp in pairs(ESPObjects.Flowers) do
+                if esp then esp:Destroy() end
+            end
+            ESPObjects.Flowers = {}
+        end
+    end
+end)
+
+-- ESP MIRAGE
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.ESPMirage and Sea == 3 then
+            for _, island in pairs(workspace:GetChildren()) do
+                if island.Name == "MysticIsland" and not ESPObjects.Mirage[island] then
+                    local part = island:FindFirstChild("Center") or island:FindFirstChildWhichIsA("Part", true)
+                    if part then
+                        local esp = CreateESP(part, "MIRAGE ISLAND", Color3.new(0, 1, 1))
+                        ESPObjects.Mirage[island] = esp
+                    end
+                end
+            end
+        else
+            for island, esp in pairs(ESPObjects.Mirage) do
+                if esp then esp:Destroy() end
+            end
+            ESPObjects.Mirage = {}
+        end
+    end
+end)
 
 -- =========================
 -- FAST ATTACK
@@ -3441,94 +3569,169 @@ end
 -- =========================
 -- ABA SEA EVENTS
 -- =========================
-Section(SeaEventTab, "Eventos do Mar")
+Section(SeaEventTab, "Configuração de Barco")
 
-Toggle(SeaEventTab, "Auto Sea Beast", function(v)
-    _G.Settings.AutoSeaBeast = v
-end, "AutoSeaBeast")
+-- Variáveis de controle
+local SeaEventRunning = false
 
-Toggle(SeaEventTab, "Auto Terrorshark", function(v)
-    _G.Settings.AutoTerrorshark = v
-end, "AutoTerrorshark")
+-- Lista de barcos grátis
+local FreeBoats = {
+    "Usar o que eu estou",
+    "Dinghy",
+    "Sloop", 
+    "Brigantine"
+}
 
-Toggle(SeaEventTab, "Auto Piranha", function(v)
-    _G.Settings.AutoPiranha = v
-end, "AutoPiranha")
+-- Lista de eventos do mar
+local SeaEvents = {
+    "Sea Beast",
+    "Tubarão",
+    "Piranha", 
+    "Terror Shark",
+    "Mares Estrodosos",
+    "Naufrágio",
+    "Barcos Piratas"
+}
+
+Dropdown(SeaEventTab, "Selecionar Barco", FreeBoats, function(v)
+    _G.Settings.SelectedBoat = v
+    SaveConfig()
+end, "SelectedBoat")
+
+Dropdown(SeaEventTab, "Tipo de Evento", SeaEvents, function(v)
+    _G.Settings.SelectedSeaEvent = v
+    SaveConfig()
+end, "SelectedSeaEvent")
+
+Button(SeaEventTab, "🚀 Começar Sea Event", function()
+    -- Verificar se selecionou barco
+    if not _G.Settings.SelectedBoat or _G.Settings.SelectedBoat == "" then
+        Notify("⚠️ Selecione um barco primeiro!")
+        return
+    end
+    
+    -- Verificar se selecionou evento
+    if not _G.Settings.SelectedSeaEvent or _G.Settings.SelectedSeaEvent == "" then
+        Notify("⚠️ Selecione um tipo de evento!")
+        return
+    end
+    
+    if SeaEventRunning then
+        Notify("⚠️ Sea Event já está rodando!")
+        return
+    end
+    
+    SeaEventRunning = true
+    _G.Settings.SeaEventActive = true
+    Notify("✅ Iniciando Sea Event: " .. _G.Settings.SelectedSeaEvent)
+    
+    task.spawn(function()
+        pcall(function()
+            -- Se não for "Usar o que eu estou", comprar barco
+            if _G.Settings.SelectedBoat ~= "Usar o que eu estou" then
+                -- Ir para Tiki Outpost
+                Notify("📍 Indo para Tiki Outpost...")
+                TP(CFrame.new(-16105, 9, 440))
+                task.wait(3)
+                
+                -- Comprar barco selecionado
+                local remote = GetRemote()
+                if remote then
+                    Notify("🛒 Comprando barco: " .. _G.Settings.SelectedBoat)
+                    remote:InvokeServer("BuyBoat", _G.Settings.SelectedBoat)
+                    task.wait(2)
+                    
+                    -- Tentar sentar no barco
+                    for _, boat in pairs(workspace.Boats:GetChildren()) do
+                        if boat:FindFirstChild("VehicleSeat") and boat.VehicleSeat.Occupant == nil then
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = boat.VehicleSeat.CFrame
+                            task.wait(0.5)
+                            break
+                        end
+                    end
+                end
+            else
+                -- Verificar se está sentado em um barco
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("Humanoid") then
+                    local seat = character.Humanoid.SeatPart
+                    if not seat or seat.Name ~= "VehicleSeat" then
+                        Notify("⚠️ Você não está em um barco! Sente-se primeiro.")
+                        SeaEventRunning = false
+                        _G.Settings.SeaEventActive = false
+                        return
+                    end
+                    Notify("✅ Usando barco atual")
+                end
+            end
+            
+            -- Iniciar farm do evento selecionado
+            Notify("⚔️ Farmando: " .. _G.Settings.SelectedSeaEvent)
+        end)
+    end)
+end)
+
+Button(SeaEventTab, "⛔ Parar Sea Event", function()
+    SeaEventRunning = false
+    _G.Settings.SeaEventActive = false
+    Notify("❌ Sea Event parado!")
+end)
 
 Section(SeaEventTab, "Barco Automático")
 
-Dropdown(SeaEventTab, "Barco", {"Nenhum", "PirateBrigade", "PirateGrandBrigade", "MarineBrigade"}, function(v)
-    _G.Settings.SeaEventBoat = v
-end, "SeaEventBoat")
-
-Dropdown(SeaEventTab, "Profundidade", {"Mar 1", "Mar 2", "Mar 3", "Mar 4", "Mar 5", "Mar 6"}, function(v)
+Dropdown(SeaEventTab, "Profundidade do Mar", {"Mar 1", "Mar 2", "Mar 3", "Mar 4", "Mar 5", "Mar 6"}, function(v)
     _G.Settings.SeaDepth = v
+    SaveConfig()
 end, "SeaDepth")
 
-Toggle(SeaEventTab, "Ativar Barco Automático", function(v)
-    _G.Settings.SeaEventActive = v
-end, "SeaEventActive")
+Toggle(SeaEventTab, "Modo Circular (Evitar Sea Beast)", function(v)
+    _G.Settings.CircularMode = v
+end, "CircularMode")
 
-Section(SeaEventTab, "Ilhas Especiais (Sea 3)")
+Section(SeaEventTab, "Leviathan (Em Breve)")
 
-if Sea == 3 then
-    Toggle(SeaEventTab, "Auto Find Mirage Island", function(v)
-        _G.Settings.AutoMirage = v
-    end, "AutoMirage")
-    
-    Toggle(SeaEventTab, "Auto Find Volcano", function(v)
-        _G.Settings.AutoVolcano = v
-    end, "AutoVolcano")
-    
-    Toggle(SeaEventTab, "Auto Find Leviathan", function(v)
-        _G.Settings.AutoLeviathan = v
-    end, "AutoLeviathan")
-    
-    Button(SeaEventTab, "🌋 Craft Volcanic Magnet", function()
-        local remote = GetRemote()
-        if remote then
-            TP(CFrame.new(-10961, 331, -8500)) -- Volcano location
-            task.wait(2)
-            remote:InvokeServer("CraftVolcanicMagnet")
-            Notify("✅ Tentando craftar Volcanic Magnet...")
-        end
-    end)
-end
+local LeviathanInfo = Instance.new("TextLabel", SeaEventTab)
+LeviathanInfo.Size = UDim2.new(1, 0, 0, 60)
+LeviathanInfo.Text = "🐉 Leviathan\n\nRecurso em desenvolvimento..."
+LeviathanInfo.TextColor3 = Color3.fromRGB(200, 200, 200)
+LeviathanInfo.BackgroundColor3 = Config.Tema.Botao
+LeviathanInfo.BackgroundTransparency = 0
+LeviathanInfo.Font = Enum.Font.Gotham
+LeviathanInfo.TextSize = 9
+LeviathanInfo.TextWrapped = true
+LeviathanInfo.TextYAlignment = Enum.TextYAlignment.Top
 
-Section(SeaEventTab, "Katakuri (Sea 2)")
+Instance.new("UICorner", LeviathanInfo).CornerRadius = UDim.new(0, 6)
 
-if Sea == 2 then
-    Toggle(SeaEventTab, "Auto Farm Katakuri Quest", function(v)
-        _G.Settings.AutoKatakuriQuest = v
-    end, "AutoKatakuriQuest")
-    
-    local KatakuriInfo = Instance.new("TextLabel", SeaEventTab)
-    KatakuriInfo.Size = UDim2.new(1, 0, 0, 60)
-    KatakuriInfo.Text = "📌 Progresso Katakuri:\nCarregando..."
-    KatakuriInfo.TextColor3 = Color3.fromRGB(200, 200, 200)
-    KatakuriInfo.BackgroundColor3 = Config.Tema.Botao
-    KatakuriInfo.BackgroundTransparency = 0.5
-    KatakuriInfo.Font = Enum.Font.Gotham
-    KatakuriInfo.TextSize = 9
-    KatakuriInfo.TextWrapped = true
-    Instance.new("UICorner", KatakuriInfo).CornerRadius = UDim.new(0, 6)
-    
-    -- Atualizar progresso Katakuri
-    task.spawn(function()
-        while task.wait(10) do
-            pcall(function()
-                local remote = GetRemote()
-                if remote then
-                    local progress = remote:InvokeServer("CakePrinceSpawner")
-                    if progress and type(progress) == "number" then
-                        KatakuriInfo.Text = string.format("📌 Progresso Katakuri:\n%d/500 (%d restantes)", progress, 500 - progress)
-                    end
-                end
-            end)
-        end
-    end)
-end
+Section(SeaEventTab, "Vulcão (Em Breve)")
 
+local VolcanoInfo = Instance.new("TextLabel", SeaEventTab)
+VolcanoInfo.Size = UDim2.new(1, 0, 0, 60)
+VolcanoInfo.Text = "🌋 Vulcão\n\nRecurso em desenvolvimento..."
+VolcanoInfo.TextColor3 = Color3.fromRGB(200, 200, 200)
+VolcanoInfo.BackgroundColor3 = Config.Tema.Botao
+VolcanoInfo.BackgroundTransparency = 0
+VolcanoInfo.Font = Enum.Font.Gotham
+VolcanoInfo.TextSize = 9
+VolcanoInfo.TextWrapped = true
+VolcanoInfo.TextYAlignment = Enum.TextYAlignment.Top
+
+Instance.new("UICorner", VolcanoInfo).CornerRadius = UDim.new(0, 6)
+
+Section(SeaEventTab, "Kitsune Island (Em Breve)")
+
+local KitsuneInfo = Instance.new("TextLabel", SeaEventTab)
+KitsuneInfo.Size = UDim2.new(1, 0, 0, 60)
+KitsuneInfo.Text = "🦊 Kitsune Island\n\nRecurso em desenvolvimento..."
+KitsuneInfo.TextColor3 = Color3.fromRGB(200, 200, 200)
+KitsuneInfo.BackgroundColor3 = Config.Tema.Botao
+KitsuneInfo.BackgroundTransparency = 0
+KitsuneInfo.Font = Enum.Font.Gotham
+KitsuneInfo.TextSize = 9
+KitsuneInfo.TextWrapped = true
+KitsuneInfo.TextYAlignment = Enum.TextYAlignment.Top
+
+Instance.new("UICorner", KitsuneInfo).CornerRadius = UDim.new(0, 6)
 -- =========================
 -- ABA ESP
 -- =========================
@@ -3913,6 +4116,97 @@ task.spawn(function()
                             _G.Settings.FastAttack = true
                         until not v.Parent or v.Humanoid.Health <= 0 or not _G.Settings.AutoPiranha
                         _G.Settings.FastAttack = false
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- =========================
+-- SISTEMA DE SEA EVENT AUTOMÁTICO
+-- =========================
+task.spawn(function()
+    while task.wait(1) do
+        if _G.Settings.SeaEventActive and SeaEventRunning then
+            pcall(function()
+                local boat = nil
+                
+                -- Encontrar barco atual
+                for _, v in pairs(workspace.Boats:GetChildren()) do
+                    if v:FindFirstChild("VehicleSeat") then
+                        local seat = v.VehicleSeat
+                        if seat.Occupant and seat.Occupant.Parent == LocalPlayer.Character then
+                            boat = v
+                            break
+                        end
+                    end
+                end
+                
+                if not boat then return end
+                
+                -- Modo circular
+                if _G.Settings.CircularMode then
+                    local SeaDepthPositions = {
+                        ["Mar 1"] = -50, 
+                        ["Mar 2"] = -100, 
+                        ["Mar 3"] = -200, 
+                        ["Mar 4"] = -400, 
+                        ["Mar 5"] = -600, 
+                        ["Mar 6"] = -800
+                    }
+                    
+                    local depth = SeaDepthPositions[_G.Settings.SeaDepth] or -50
+                    local radius = 300
+                    local angle = (tick() * 0.5) % (math.pi * 2)
+                    
+                    local xOffset = math.cos(angle) * radius
+                    local zOffset = math.sin(angle) * radius
+                    local currentPos = boat.VehicleSeat.CFrame.Position
+                    
+                    boat.VehicleSeat.CFrame = CFrame.new(currentPos.X + xOffset, depth, currentPos.Z + zOffset)
+                end
+                
+                -- Farmar evento selecionado
+                local event = _G.Settings.SelectedSeaEvent
+                
+                if event == "Sea Beast" then
+                    for _, beast in pairs(workspace.SeaBeasts:GetChildren()) do
+                        if beast:FindFirstChild("Humanoid") and beast.Humanoid.Health > 0 then
+                            repeat
+                                task.wait()
+                                EquipWeapon()
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = beast.HumanoidRootPart.CFrame * CFrame.new(0, 50, 0)
+                                _G.Settings.FastAttack = true
+                            until not beast.Parent or beast.Humanoid.Health <= 0 or not SeaEventRunning
+                            _G.Settings.FastAttack = false
+                        end
+                    end
+                    
+                elseif event == "Terror Shark" then
+                    for _, shark in pairs(workspace.Enemies:GetChildren()) do
+                        if shark.Name == "Terrorshark" and shark:FindFirstChild("Humanoid") and shark.Humanoid.Health > 0 then
+                            repeat
+                                task.wait()
+                                EquipWeapon()
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = shark.HumanoidRootPart.CFrame * CFrame.new(0, 50, 0)
+                                _G.Settings.FastAttack = true
+                            until not shark.Parent or shark.Humanoid.Health <= 0 or not SeaEventRunning
+                            _G.Settings.FastAttack = false
+                        end
+                    end
+                    
+                elseif event == "Tubarão" or event == "Piranha" then
+                    for _, fish in pairs(workspace.Enemies:GetChildren()) do
+                        if (fish.Name == "Shark" or fish.Name == "Piranha") and fish:FindFirstChild("Humanoid") and fish.Humanoid.Health > 0 then
+                            repeat
+                                task.wait()
+                                EquipWeapon()
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = fish.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                                _G.Settings.FastAttack = true
+                            until not fish.Parent or fish.Humanoid.Health <= 0 or not SeaEventRunning
+                            _G.Settings.FastAttack = false
+                        end
                     end
                 end
             end)
