@@ -126,6 +126,9 @@ _G.Settings = {
     AutoKatakuriQuest = false
 }
 
+-- Variáveis de controle de Sea Events (GLOBAL)
+local SeaEventRunning = false
+
 -- =========================
 -- SISTEMA DE SAVE
 -- =========================
@@ -3776,9 +3779,6 @@ end
 -- ABA SEA EVENTS
 -- =========================
 Section(SeaEventTab, "Configuração de Barco")
-
--- Variáveis de controle
-local SeaEventRunning = false
 
 -- Lista de barcos grátis
 local FreeBoats = {
