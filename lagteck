@@ -559,12 +559,14 @@ local ESPObjects = {
 
 -- Função para criar ESP com melhor visibilidade
 local function CreateESP(obj, text, color, offset)
+    local billboard = nil
+    
     pcall(function()
         if obj:FindFirstChild("ESPTag") then 
             obj.ESPTag:Destroy()
         end
         
-        local billboard = Instance.new("BillboardGui")
+        billboard = Instance.new("BillboardGui")
         billboard.Name = "ESPTag"
         billboard.Parent = obj
         billboard.Size = UDim2.new(0, 200, 0, 50)
@@ -582,9 +584,9 @@ local function CreateESP(obj, text, color, offset)
         label.TextStrokeTransparency = 0.5
         label.TextStrokeColor3 = Color3.new(0, 0, 0)
         label.Text = text
-        
-        return billboard
     end)
+    
+    return billboard
 end
 
 -- ESP FRUTAS (MELHORADO)
