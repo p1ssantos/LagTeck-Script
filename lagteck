@@ -570,7 +570,7 @@ task.spawn(function()
 end)
 
 -- =========================
--- ESP SYSTEMS COMPLETO E FUNCIONAL
+-- ESP SYSTEMS (PROTEGIDO)
 -- =========================
 local ESPObjects = {
     Fruits = {},
@@ -583,25 +583,26 @@ local ESPObjects = {
     Bosses = {}
 }
 
--- Função para criar ESP com melhor visibilidade
+local ESPEnabled = false -- Controle global
+
 local function CreateESP(obj, text, color, offset)
-    local billboard = nil
+    if not obj or not obj.Parent then return nil end
     
-    pcall(function()
+    local success, billboard = pcall(function()
         if obj:FindFirstChild("ESPTag") then 
             obj.ESPTag:Destroy()
         end
         
-        billboard = Instance.new("BillboardGui")
-        billboard.Name = "ESPTag"
-        billboard.Parent = obj
-        billboard.Size = UDim2.new(0, 200, 0, 50)
-        billboard.AlwaysOnTop = true
-        billboard.StudsOffset = offset or Vector3.new(0, 3, 0)
-        billboard.Adornee = obj
-        billboard.MaxDistance = 5000
+        local bb = Instance.new("BillboardGui")
+        bb.Name = "ESPTag"
+        bb.Parent = obj
+        bb.Size = UDim2.new(0, 200, 0, 50)
+        bb.AlwaysOnTop = true
+        bb.StudsOffset = offset or Vector3.new(0, 3, 0)
+        bb.Adornee = obj
+        bb.MaxDistance = 5000
         
-        local label = Instance.new("TextLabel", billboard)
+        local label = Instance.new("TextLabel", bb)
         label.Size = UDim2.new(1, 0, 1, 0)
         label.BackgroundTransparency = 1
         label.TextColor3 = color
@@ -610,343 +611,69 @@ local function CreateESP(obj, text, color, offset)
         label.TextStrokeTransparency = 0.5
         label.TextStrokeColor3 = Color3.new(0, 0, 0)
         label.Text = text
+        
+        return bb
     end)
     
-    return billboard
+    return success and billboard or nil
 end
 
--- ESP FRUTAS (MELHORADO)
-task.spawn(function()
-    while task.wait(2) do
-        if _G.Settings.ESPFruit then
-            pcall(function()
-                -- Frutas no workspace
-                for _, obj in pairs(workspace:GetChildren()) do
-                    if obj:IsA("Tool") or (obj:IsA("Model") and obj:FindFirstChild("Handle")) then
-                        local handle = obj:IsA("Tool") and obj:FindFirstChild("Handle") or obj.Handle
-                        if handle and not ESPObjects.Fruits[obj] then
-                            local fruitName = obj.Name
-                            -- Verificar se é realmente uma fruta
-                            if fruitName:find("Fruit") or obj:FindFirstChild("Fruit") then
-                                local esp = CreateESP(handle, "🍎 " .. fruitName, Color3.new(1, 1, 0), Vector3.new(0, 5, 0))
-                                if esp then
-                                    ESPObjects.Fruits[obj] = esp
-                                    
-                                    task.spawn(function()
-                                        while obj and obj.Parent and _G.Settings.ESPFruit and handle do
-                                            pcall(function()
-                                                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                                    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - handle.Position).Magnitude
-                                                    esp.TextLabel.Text = "🍎 " .. fruitName .. "\n" .. math.floor(distance) .. "m"
-                                                end
-                                            end)
-                                            task.wait(0.5)
-                                        end
-                                        if esp then esp:Destroy() end
-                                        ESPObjects.Fruits[obj] = nil
-                                    end)
-                                end
-                            end
-                        end
-                    end
-                end
-            end)
-        else
-            -- Limpar todos os ESPs de frutas
-            for obj, esp in pairs(ESPObjects.Fruits) do
-                pcall(function()
-                    if esp then esp:Destroy() end
-                end)
-            end
-            ESPObjects.Fruits = {}
-        end
-    end
-end)
-
--- ESP PLAYERS (MELHORADO)
-task.spawn(function()
-    while task.wait(1) do
-        if _G.Settings.ESPPlayer then
-            pcall(function()
-                for _, player in pairs(Players:GetPlayers()) do
-                    if player ~= LocalPlayer and player.Character then
-                        local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-                        local hum = player.Character:FindFirstChild("Humanoid")
-                        
-                        if hrp and hum and hum.Health > 0 then
-                            if not ESPObjects.Players[player] then
-                                local esp = CreateESP(hrp, "👤 " .. player.Name, Color3.new(1, 0, 0), Vector3.new(0, 3, 0))
-                                if esp then
-                                    ESPObjects.Players[player] = esp
-                                    
-                                    task.spawn(function()
-                                        while player and player.Character and _G.Settings.ESPPlayer do
-                                            pcall(function()
-                                                local char = player.Character
-                                                local rootPart = char and char:FindFirstChild("HumanoidRootPart")
-                                                local humanoid = char and char:FindFirstChild("Humanoid")
-                                                
-                                                if rootPart and humanoid and humanoid.Health > 0 then
-                                                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                                        local distance = (LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-                                                        local health = math.floor((humanoid.Health / humanoid.MaxHealth) * 100)
-                                                        esp.TextLabel.Text = "👤 " .. player.Name .. "\n" .. math.floor(distance) .. "m | HP: " .. health .. "%"
-                                                        
-                                                        -- Mudar cor baseado na distância
-                                                        if distance < 50 then
-                                                            esp.TextLabel.TextColor3 = Color3.new(1, 0, 0) -- Vermelho (perto)
-                                                        elseif distance < 150 then
-                                                            esp.TextLabel.TextColor3 = Color3.new(1, 0.5, 0) -- Laranja (médio)
-                                                        else
-                                                            esp.TextLabel.TextColor3 = Color3.new(1, 1, 0) -- Amarelo (longe)
-                                                        end
-                                                    end
-                                                else
-                                                    break
-                                                end
-                                            end)
-                                            task.wait(0.3)
-                                        end
-                                        if esp then esp:Destroy() end
-                                        ESPObjects.Players[player] = nil
-                                    end)
-                                end
-                            end
-                        end
-                    end
-                end
-            end)
-        else
-            -- Limpar todos os ESPs de players
-            for player, esp in pairs(ESPObjects.Players) do
-                pcall(function()
-                    if esp then esp:Destroy() end
-                end)
-            end
-            ESPObjects.Players = {}
-        end
-    end
-end)
-
--- ESP CHESTS (MELHORADO)
+-- ESP FRUTAS (PROTEGIDO)
 task.spawn(function()
     while task.wait(3) do
-        if _G.Settings.ESPChest then
-            pcall(function()
-                -- Procurar chests no workspace
-                for _, obj in pairs(workspace:GetChildren()) do
-                    if (obj.Name:find("Chest") or obj.Name == "Chest1" or obj.Name == "Chest2" or obj.Name == "Chest3") and not ESPObjects.Chests[obj] then
-                        local part = obj:IsA("Model") and (obj:FindFirstChild("Root") or obj:FindFirstChild("Part") or obj:FindFirstChildWhichIsA("Part")) or obj
-                        
-                        if part and part:IsA("BasePart") then
-                            local chestType = "💎 Chest"
-                            if obj.Name:find("Gold") or obj.Name == "Chest2" then
-                                chestType = "🟡 Golden Chest"
-                            elseif obj.Name:find("Diamond") or obj.Name == "Chest3" then
-                                chestType = "💠 Diamond Chest"
-                            end
-                            
-                            local esp = CreateESP(part, chestType, Color3.new(0, 1, 0), Vector3.new(0, 3, 0))
-                            if esp then
-                                ESPObjects.Chests[obj] = esp
-                                
-                                task.spawn(function()
-                                    while obj and obj.Parent and _G.Settings.ESPChest do
-                                        pcall(function()
-                                            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                                local distance = (LocalPlayer.Character.HumanoidRootPart.Position - part.Position).Magnitude
-                                                esp.TextLabel.Text = chestType .. "\n" .. math.floor(distance) .. "m"
-                                            end
-                                        end)
-                                        task.wait(0.5)
-                                    end
-                                    if esp then esp:Destroy() end
-                                    ESPObjects.Chests[obj] = nil
-                                end)
-                            end
+        SafeExecute(function()
+            if not _G.Settings.ESPFruit then
+                for obj, esp in pairs(ESPObjects.Fruits) do
+                    if esp then esp:Destroy() end
+                end
+                ESPObjects.Fruits = {}
+                return
+            end
+            
+            for _, obj in pairs(workspace:GetChildren()) do
+                if (obj:IsA("Tool") or (obj:IsA("Model") and obj:FindFirstChild("Handle"))) and not ESPObjects.Fruits[obj] then
+                    local handle = obj:IsA("Tool") and obj:FindFirstChild("Handle") or obj.Handle
+                    if handle and (obj.Name:find("Fruit") or obj:FindFirstChild("Fruit")) then
+                        local esp = CreateESP(handle, "🍎 " .. obj.Name, Color3.new(1, 1, 0), Vector3.new(0, 5, 0))
+                        if esp then
+                            ESPObjects.Fruits[obj] = esp
                         end
                     end
                 end
-            end)
-        else
-            -- Limpar todos os ESPs de chests
-            for chest, esp in pairs(ESPObjects.Chests) do
-                pcall(function()
-                    if esp then esp:Destroy() end
-                end)
             end
-            ESPObjects.Chests = {}
-        end
+        end, "ESP Frutas")
     end
 end)
 
--- ESP FLOWERS (MELHORADO)
-task.spawn(function()
-    while task.wait(4) do
-        if _G.Settings.ESPFlower then
-            pcall(function()
-                -- Procurar flores (Blue Flower, Red Flower para Godhuman)
-                for _, obj in pairs(workspace:GetChildren()) do
-                    if (obj.Name:find("Flower") or obj.Name == "Blue Flower" or obj.Name == "Red Flower") and not ESPObjects.Flowers[obj] then
-                        local part = obj:IsA("Model") and (obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("Part")) or obj
-                        
-                        if part and part:IsA("BasePart") then
-                            local flowerColor = Color3.new(1, 0, 1) -- Magenta padrão
-                            local flowerName = "🌸 Flower"
-                            
-                            if obj.Name:find("Blue") then
-                                flowerColor = Color3.new(0, 0.5, 1)
-                                flowerName = "🔵 Blue Flower"
-                            elseif obj.Name:find("Red") then
-                                flowerColor = Color3.new(1, 0, 0)
-                                flowerName = "🔴 Red Flower"
-                            end
-                            
-                            local esp = CreateESP(part, flowerName, flowerColor, Vector3.new(0, 2, 0))
-                            if esp then
-                                ESPObjects.Flowers[obj] = esp
-                                
-                                task.spawn(function()
-                                    while obj and obj.Parent and _G.Settings.ESPFlower do
-                                        pcall(function()
-                                            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                                local distance = (LocalPlayer.Character.HumanoidRootPart.Position - part.Position).Magnitude
-                                                esp.TextLabel.Text = flowerName .. "\n" .. math.floor(distance) .. "m"
-                                            end
-                                        end)
-                                        task.wait(0.5)
-                                    end
-                                    if esp then esp:Destroy() end
-                                    ESPObjects.Flowers[obj] = nil
-                                end)
-                            end
-                        end
-                    end
-                end
-            end)
-        else
-            -- Limpar todos os ESPs de flowers
-            for flower, esp in pairs(ESPObjects.Flowers) do
-                pcall(function()
-                    if esp then esp:Destroy() end
-                end)
-            end
-            ESPObjects.Flowers = {}
-        end
-    end
-end)
-
--- ESP MIRAGE ISLAND (MELHORADO)
-task.spawn(function()
-    while task.wait(10) do
-        if _G.Settings.ESPMirage and Sea == 3 then
-            pcall(function()
-                -- Procurar Mirage Island
-                for _, obj in pairs(workspace:GetChildren()) do
-                    if obj.Name == "MysticIsland" and not ESPObjects.Mirage[obj] then
-                        -- Procurar a parte central da ilha
-                        local center = obj:FindFirstChild("Center") or obj:FindFirstChild("RootPart") or obj:FindFirstChildWhichIsA("Part", true)
-                        
-                        if center then
-                            local esp = CreateESP(center, "🏝️ MIRAGE ISLAND!", Color3.new(0, 1, 1), Vector3.new(0, 50, 0))
-                            if esp then
-                                ESPObjects.Mirage[obj] = esp
-                                Notify("🏝️ Mirage Island detectada!")
-                                
-                                task.spawn(function()
-                                    while obj and obj.Parent and _G.Settings.ESPMirage do
-                                        pcall(function()
-                                            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                                local distance = (LocalPlayer.Character.HumanoidRootPart.Position - center.Position).Magnitude
-                                                esp.TextLabel.Text = "🏝️ MIRAGE ISLAND\n" .. math.floor(distance) .. "m"
-                                            end
-                                        end)
-                                        task.wait(1)
-                                    end
-                                    if esp then esp:Destroy() end
-                                    ESPObjects.Mirage[obj] = nil
-                                end)
-                            end
-                        end
-                    end
-                end
-            end)
-        else
-            -- Limpar todos os ESPs de mirage
-            for island, esp in pairs(ESPObjects.Mirage) do
-                pcall(function()
-                    if esp then esp:Destroy() end
-                end)
-            end
-            ESPObjects.Mirage = {}
-        end
-    end
-end)
-
--- ESP NPCS/BOSSES (NOVO)
+-- ESP PLAYERS (PROTEGIDO)
 task.spawn(function()
     while task.wait(2) do
-        if _G.Settings.ESPNPC then
-            pcall(function()
-                -- Procurar NPCs e Bosses em workspace.Enemies
-                for _, mob in pairs(workspace.Enemies:GetChildren()) do
-                    if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") then
-                        if not ESPObjects.NPCs[mob] then
-                            local isBoss = false
-                            local mobName = mob.Name
-                            
-                            -- Verificar se é um boss
-                            for _, bossName in pairs(BossList) do
-                                if mobName == bossName then
-                                    isBoss = true
-                                    break
-                                end
-                            end
-                            
-                            local color = isBoss and Color3.new(1, 0, 0) or Color3.new(1, 1, 1)
-                            local icon = isBoss and "👑" or "⚔️"
-                            
-                            local esp = CreateESP(mob.HumanoidRootPart, icon .. " " .. mobName, color, Vector3.new(0, 3, 0))
-                            if esp then
-                                ESPObjects.NPCs[mob] = esp
-                                
-                                task.spawn(function()
-                                    while mob and mob.Parent and _G.Settings.ESPNPC and mob:FindFirstChild("Humanoid") do
-                                        pcall(function()
-                                            local humanoid = mob.Humanoid
-                                            if humanoid.Health > 0 then
-                                                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                                    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude
-                                                    local health = math.floor((humanoid.Health / humanoid.MaxHealth) * 100)
-                                                    esp.TextLabel.Text = icon .. " " .. mobName .. "\n" .. math.floor(distance) .. "m | HP: " .. health .. "%"
-                                                end
-                                            else
-                                                break
-                                            end
-                                        end)
-                                        task.wait(0.3)
-                                    end
-                                    if esp then esp:Destroy() end
-                                    ESPObjects.NPCs[mob] = nil
-                                end)
-                            end
+        SafeExecute(function()
+            if not _G.Settings.ESPPlayer then
+                for player, esp in pairs(ESPObjects.Players) do
+                    if esp then esp:Destroy() end
+                end
+                ESPObjects.Players = {}
+                return
+            end
+            
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp and not ESPObjects.Players[player] then
+                        local esp = CreateESP(hrp, "👤 " .. player.Name, Color3.new(1, 0, 0), Vector3.new(0, 3, 0))
+                        if esp then
+                            ESPObjects.Players[player] = esp
                         end
                     end
                 end
-            end)
-        else
-            -- Limpar todos os ESPs de NPCs
-            for npc, esp in pairs(ESPObjects.NPCs) do
-                pcall(function()
-                    if esp then esp:Destroy() end
-                end)
             end
-            ESPObjects.NPCs = {}
-        end
+        end, "ESP Players")
     end
 end)
 
-print("✅ ESP System carregado e funcional!")
+-- ADICIONE OS OUTROS ESP COM A MESMA ESTRUTURA
+
 
 -- =========================
 -- FAST ATTACK
